@@ -1,0 +1,8 @@
+.idea
+node_modules
+svn/*
+assets
+!assets/index.php
+!assets/admin/css/fonts/*
+package-lock.json
+.DS_Store

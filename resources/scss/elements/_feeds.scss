@@ -1,0 +1,53 @@
+.fcon_provider_selectors {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+        display: inline-block;
+        margin-right: 15px;
+        padding: 10px;
+        border-radius: 5px;
+
+        img {
+            max-width: 100px;
+        }
+
+        &.fcon_active_trigger {
+            border: 1px solid var(--el-color-primary);
+        }
+    }
+}
+
+
+.fcon_trigger_view {
+    margin: 0 -20px 10px;
+    border-bottom: 1px solid #e3e8ed;
+    padding: 0px 20px 10px;
+
+    .fcon_provider_info {
+        display: flex;
+        align-content: center;
+        align-items: center;
+        cursor: pointer;
+        .fc_trigger_logo {
+            margin-right: 20px;
+            img {
+                width: 32px;
+            }
+        }
+        .fc_trigger_titles {
+            flex-grow: 1;
+            font-size: 17px;
+            span.fc_item_open {
+                float: right;
+            }
+        }
+    }
+    .fcon_trigger_editor {
+        overflow: hidden;
+        padding: 15px 20px;
+        background: #f7fafc;
+        margin-bottom: 20px;
+    }
+}

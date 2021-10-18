@@ -1,0 +1,121 @@
+// text colors
+.text {
+    &-primary {
+        color: #20a0ff
+    }
+
+    &-success {
+        color: #13ce66
+    }
+
+    &-info {
+        color: #50bfff
+    }
+
+    &-warning {
+        color: #f7ba2a
+    }
+
+    &-bg-highlight {
+        background: #EEEEEE;
+    }
+
+    &-danger {
+        color: #ff4949
+    }
+
+    &-align {
+        &-right {
+            text-align: right;
+        }
+
+        &-center {
+            text-align: center;
+        }
+    }
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.fs_route_wrapper {
+    margin-right: 20px;
+}
+.fs_padded_20 {
+    padding: 20px;
+}
+
+
+.fs_box_narrow {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.fs_box_wrapper {
+    box-sizing: border-box;
+    * {
+        box-sizing: border-box;
+    }
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    .fs_box_header {
+        display: block;
+        width: auto;
+        border-bottom: 1px solid #e3e8ee;
+        clear: both;
+        overflow: hidden;
+        margin: 0;
+        padding: 10px 15px;
+        background-color: #f7fafc;
+        font-weight: 700;
+        color: #697386;
+        .fs_box_head {
+            float: left;
+            h3 {
+                display: inline-block;
+                margin: 8px 20px 8px 0;
+                padding: 0;
+                font-size: 20px;
+            }
+        }
+        .fs_box_actions {
+            float: right;
+        }
+    }
+    .fs_box_body {
+        background: #fff;
+        display: block;
+        overflow: hidden;
+    }
+}
+
+.btn_link {
+    text-decoration: none;
+}
+
+.fcon_inner_table_wrap {
+    padding: 5px 20px 20px;
+    background: #f0f0f1;
+}
+
+.fcon_box_widgets {
+    display: flex;
+    align-items: center;
+    .fcon_box_widget {
+        min-width: 250px;
+        text-align: center;
+        margin-right: 20px;
+        padding: 20px 25px;
+        border: 1px solid #e3e8ed;
+        border-radius: 5px;
+        cursor: pointer;
+        h3 {
+            font-size: 30px;
+        }
+        &:hover {
+            background: #e3e8ed;
+        }
+    }
+}
