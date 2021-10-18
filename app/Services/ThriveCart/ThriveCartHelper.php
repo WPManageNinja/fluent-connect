@@ -13,7 +13,7 @@ class ThriveCartHelper
             return [];
         }
 
-        $api = new APi($apiKey);
+        $api = new Api($apiKey);
         $products = $api->get('products');
         if (is_wp_error($products)) {
             $products = [];
@@ -27,7 +27,7 @@ class ThriveCartHelper
         if(!$apiKey) {
             return [];
         }
-        $api = new APi($apiKey);
+        $api = new Api($apiKey);
         $bumps = $api->get('bumps');
         if (is_wp_error($bumps)) {
             $bumps = [];

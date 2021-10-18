@@ -100,7 +100,7 @@ class Application extends Container
         $this['path.config'] = $this->basePath . 'config/';
         $this['path.assets'] = $this->basePath . 'assets/';
         $this['path.resources'] = $this->basePath . 'resources/';
-        $this['path.views'] = $this['path.app'] . 'views/';
+        $this['path.views'] = $this['path.app'] . 'Views/';
     }
 
     protected function loadConfigIfExists()
