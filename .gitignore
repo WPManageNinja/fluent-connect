@@ -1,8 +1,5 @@
 .idea
 node_modules
 svn/*
-assets
-!assets/index.php
-!assets/admin/css/fonts/*
-package-lock.json
+assets/
 .DS_Store
