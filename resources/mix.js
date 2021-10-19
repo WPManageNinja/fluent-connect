@@ -18,7 +18,6 @@ mix.webpackConfig({
     //     ]
     // },
     output: {
-        publicPath: Mix.isUsing('hmr') ? '/' : '/wp-content/plugins/fluent-connect/assets/',
         chunkFilename: 'admin/js/[name].js'
     },
     plugins: [
