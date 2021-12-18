@@ -11,27 +11,27 @@ class ComposerStaticInit5121ff3fb298fdec66ae73789e350cee
     );
 
     public static $prefixLengthsPsr4 = array (
-        'W' =>
+        'W' => 
         array (
             'WPFluent\\' => 9,
         ),
-        'F' =>
+        'F' => 
         array (
-            'FluentConnect\\Framework\\' => 26,
-            'FluentConnect\\App\\' => 20,
+            'FluentConnect\\Framework\\' => 24,
+            'FluentConnect\\App\\' => 18,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'WPFluent\\' =>
+        'WPFluent\\' => 
         array (
             0 => __DIR__ . '/..' . '/wpfluent/framework/src/WPFluent',
         ),
-        'FluentConnect\\Framework\\' =>
+        'FluentConnect\\Framework\\' => 
         array (
             0 => __DIR__ . '/..' . '/wpfluent/framework/src/WPFluent',
         ),
-        'FluentConnect\\App\\' =>
+        'FluentConnect\\App\\' => 
         array (
             0 => __DIR__ . '/../..' . '/app',
         ),

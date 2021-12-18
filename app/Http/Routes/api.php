@@ -10,6 +10,7 @@ $router->get('/welcome', 'WelcomeController@index');
 $router->prefix('integrations')->withPolicy('UserPolicy')->group(function ($router) {
     $router->get('/', 'IntegrationController@index');
     $router->get('/{id}', 'IntegrationController@getInfo')->int('id');
+    $router->put('/{id}', 'IntegrationController@update')->int('id');
     $router->delete('/{id}', 'IntegrationController@delete')->int('id');
 
     $router->get('providers', 'IntegrationProviders@getAll');

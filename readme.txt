@@ -1,16 +1,17 @@
-=== Fluent Connect ===
+=== Fluent Connect - Connect ThriveCart with your WordPress and FluentCRM ===
 Contributors: techjewel,wpmanageninja
 Tags: ThriveCart, FluentCRM, connector
 Requires at least: 5.0
 Tested up to: 5.8
 Requires PHP: 5.6
-Stable tag: 0.1
+Stable tag: 0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Connect ThriveCart with your WordPress and FluentCRM
+Connect ThriveCart shop with your WordPress and FluentCRM
 
 == Description ==
+
 = Connect ThriveCart with FluentCRM & WordPress =
 The aim of this plugin is to connect ThriveCart with FluentCRM. ThriveCart is a super simple and powerful cart solution for internet marketers on the other hand FluentCRM is a powerful and most cost effective email markting solution right into your WordPress.
 We are aiming to connect ThriveCart with your FluentCRM as well as WordPress.
@@ -55,11 +56,15 @@ Yes, You need both to make this plugin work.
 
 
 == Screenshots ==
+1. ThriveCart to FluentCRM Integration Feed
+2. All Integrations
+2. ThriveCart Integration Page
+2. FluentConnect Dashboard
 
 
 == Changelog ==
 
-= 0.1 (Date: October 18, 2021) =
+= 0.2 (Date: October 25, 2021) =
 * Initial Beta Release
 
 == Upgrade Notice ==

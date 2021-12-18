@@ -76,6 +76,22 @@ class IntegrationController extends Controller
         ];
     }
 
+    public function update(Request $request, $id)
+    {
+        $integration = Integration::findOrFail($id);
+
+        $updateData = $request->all();
+
+        if(isset($updateData['status']) && $updateData['status'] == 'published') {
+            $updateData['settings'] = $integration->settings;
+            $updateData['settings']['webhook_verified'] = true;
+        }
+
+        $integration->fill($updateData)->save();
+
+        return $this->getInfo($request, $id);
+    }
+
     public function delete(Request $request, $id)
     {
         Integration::where('id', $id)->delete();
