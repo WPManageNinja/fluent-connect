@@ -18,10 +18,11 @@
                         <el-input v-model="other_data.webhook_url" :readonly="true" />
                         <p>Please copy the webhook url and set to ThriveCart webhook settings</p>
                         <el-button size="small" @click="fetchIntegration()" type="success">I have done it</el-button>
+                        <el-button @click="publish()" size="small" type="danger" v-if="fetch_counter >= 2">Publish Anyway</el-button>
                     </div>
                     <div class="text-align-center" v-else-if="integration.status == 'draft'">
                         <h3>This API integration is on draft mode.</h3>
-                        <el-button type="primary">Publish this API Integration</el-button>
+                        <el-button @click="publish()" type="primary">Publish this API Integration</el-button>
                     </div>
                     <div v-else class="text-align-center">
                         <h3>Your ThriveCart Account ({{integration.remote_id}}) is connected</h3>
@@ -51,13 +52,32 @@ export default {
             integration: false,
             html_info: '',
             fetching: false,
-            other_data: false
+            other_data: false,
+            fetch_counter: 0
         }
     },
     methods: {
         fetchIntegration() {
             this.fetching = true;
+            this.fetch_counter += 1;
             this.$get('integrations/' + this.id)
+                .then(response => {
+                    this.integration = response.integration;
+                    this.html_info = response.html_info;
+                    this.other_data = response.other_data;
+                })
+                .catch(errors => {
+                    this.$handleError(errors);
+                })
+                .always(() => {
+                    this.fetching = false;
+                });
+        },
+        publish() {
+            this.fetching = true;
+            this.$put('integrations/' + this.id, {
+                status: 'published'
+            })
                 .then(response => {
                     this.integration = response.integration;
                     this.html_info = response.html_info;
