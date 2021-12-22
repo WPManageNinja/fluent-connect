@@ -11,7 +11,8 @@
                 <template v-if="require_setup">
                     <div class="fcon_welcome text-align-center">
                         <h2>Thanks for installing <b>Fluent Connect</b></h2>
-                        <p>Using Fluent Connect, you can easily integrate ThriveCart with FluentCRM</p>
+                        <p>Using Fluent Connect, you can easily integrate External Services or Migrate From other CRMs
+                            into FluentCRM</p>
                         <hr/>
                     </div>
                     <div class="text-align-center" v-if="!has_fluentcrm">

@@ -13,8 +13,6 @@
  * @var $app FluentConnect\Framework\Foundation\Application
  */
 
-
-
 $app->addAction('admin_menu', 'AdminMenuHandler@add');
 
 $app->addAction('init', 'WebhookReceiverHandler@route');
@@ -38,3 +36,12 @@ $app->addAction('init', 'WebhookReceiverHandler@route');
 //\FluentConnect\App\Services\ConnectStores::addTrigger('wp', 'profile_update', \FluentConnect\App\Services\Triggers\WP\ProfileUpdated::class);
 
 (new \FluentConnect\App\Hooks\Handlers\TriggerInitHandler())->init();
+
+if(isset($_REQUEST['connect_test'])) {
+    add_action('init', function () {
+        $mailChimp = new \FluentConnect\App\Migrators\MailChimp\MailChimpMigrator();
+        vdd($mailChimp->getContacts([
+            'list_id' => '300b91e5ed',
+        ], 20, 20));
+    });
+}
