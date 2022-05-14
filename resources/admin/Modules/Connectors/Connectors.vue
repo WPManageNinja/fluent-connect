@@ -42,7 +42,7 @@
                     </el-table-column>
                 </el-table>
 
-                <div class="fframe_pagination_wrapper">
+                <div class="fframe_pagination_wrapper" style="margin-top:20px;text-align:right;">
                     <pagination @fetch="fetch()" :pagination="pagination"/>
                 </div>
 
@@ -76,11 +76,16 @@
 </template>
 
 <script type="text/babel">
+import Pagination from "@/admin/Pieces/Pagination";
+
 export default {
     name: 'DataConnectorFeeds',
+    components: {
+        Pagination
+    },
     data() {
         return {
-            loading: true,
+            loading: false,
             pagination: {
                 current_page: 1,
                 per_page: 10,
@@ -98,8 +103,8 @@ export default {
         fetch() {
             this.loading = true;
             this.$get('feeds', {
-                page: this.current_page,
-                per_page: this.per_page
+                per_page: this.pagination.per_page,
+                page: this.pagination.current_page
             })
                 .then(response => {
                     this.feeds = response.feeds.data;

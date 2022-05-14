@@ -39,7 +39,7 @@
                     </el-table-column>
                 </el-table>
 
-                <div class="fframe_pagination_wrapper">
+                <div class="fframe_pagination_wrapper" style="margin-top:20px;text-align:right;">
                     <pagination @fetch="fetch()" :pagination="pagination"/>
                 </div>
             </div>
@@ -70,8 +70,8 @@ export default {
         fetch() {
             this.loading = true;
             this.$get('integrations', {
-                per_page: this.per_page,
-                page: this.current_page
+                per_page: this.pagination.per_page,
+                page: this.pagination.current_page
             })
                 .then(response => {
                     this.integrations = response.integrations.data;

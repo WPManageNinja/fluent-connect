@@ -43,8 +43,8 @@
                     <el-table-column :width="100" label="Status" prop="status"></el-table-column>
                     <el-table-column :width="160" label="Date Time" prop="created_at"></el-table-column>
                 </el-table>
-                
-                <div class="fframe_pagination_wrapper">
+
+                <div class="fframe_pagination_wrapper" style="margin-top:20px;text-align:right;">
                     <pagination @fetch="fetch()" :pagination="pagination"/>
                 </div>
             </div>
@@ -75,8 +75,8 @@ export default {
         fetch() {
             this.loading = true;
             this.$get('reports/logs', {
-                per_page: this.per_page,
-                page: this.current_page,
+                per_page: this.pagination.per_page,
+                page: this.pagination.current_page,
                 with: ['trigger', 'actions']
             })
                 .then(response => {
