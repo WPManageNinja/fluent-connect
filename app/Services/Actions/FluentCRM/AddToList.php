@@ -84,7 +84,7 @@ class AddToList extends BaseAction
             return new \WP_Error('failed', 'Contact could not be created on FluentCRM');
         }
 
-        $contact->attachLists(Arr::get($action->settings, 'tag_ids', []));
+        $contact->attachLists(Arr::get($action->settings, 'list_ids', []));
         $message = 'Contact has been updated in FluentCRM';
 
         if ($contact->wasRecentlyCreated) {
