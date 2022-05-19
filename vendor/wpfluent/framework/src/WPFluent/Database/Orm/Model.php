@@ -2066,7 +2066,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      */
     public function getPerPage()
     {
-        return $this->perPage;
+        return (isset($_REQUEST['per_page'])) ? intval($_REQUEST['per_page']) : $this->perPage;
     }
 
     /**
