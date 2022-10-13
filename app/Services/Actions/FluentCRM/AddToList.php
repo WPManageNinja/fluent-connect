@@ -52,7 +52,7 @@ class AddToList extends BaseAction
         return [
             'list_ids'           => [
                 'type'        => 'input-options',
-                'label'       => 'Select Tags',
+                'label'       => 'Select Lists',
                 'is_multiple' => true,
                 'placeholder' => 'Select FluentCRM Lists',
                 'options'     => Lists::orderBy('title', 'ASC')->select(['id', 'title'])->get()
