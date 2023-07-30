@@ -10,7 +10,7 @@
                 </div>
             </div>
             <div class="fs_box_body fs_padded_20">
-                <el-table :data="feeds" border stripe>
+                <el-table v-if="all_loaded" :data="feeds" border stripe>
                     <el-table-column prop="id" label="ID" width="90"/>
                     <el-table-column label="Title">
                         <template #default="scope">
@@ -96,7 +96,8 @@ export default {
             new_feed: {
                 title: ''
             },
-            saving: true
+            saving: true,
+            all_loaded: false
         }
     },
     methods: {
@@ -115,6 +116,7 @@ export default {
                 })
                 .always(() => {
                     this.loading = false;
+                    this.all_loaded = true;
                 });
         },
         addFeed() {

@@ -35,7 +35,7 @@
                     <el-checkbox v-model="action.status" true-label="published" false-label="draft">Activate this Action</el-checkbox>
 
                     <div style="display: block; margin-top: 10px;">
-                        <el-button @click="emitSave()" size="small" type="success">Save</el-button>
+                        <el-button @click="emitSave()" size="small" type="primary">Update Action</el-button>
                     </div>
 
                 </div>

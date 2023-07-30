@@ -34,7 +34,7 @@
                         </div>
                     </div>
                     <div class="fs_box_body fs_padded_20">
-                        <trigger-mappers @update="updateFeed()" :integrations="integrations" :feed_id="feed.id" :all_triggers="all_triggers" :triggers="feed.triggers" />
+                        <trigger-mappers @update="updateFeed()" @addTrigger="(trigger) => { feed.trigger = trigger; }" :integrations="integrations" :feed_id="feed.id" :all_triggers="all_triggers" :trigger="feed.trigger" />
                     </div>
                 </div>
                 <div style="margin-top: 30px;" class="fs_box fs_dashboard_box">
@@ -44,7 +44,7 @@
                         </div>
                     </div>
                     <div class="fs_box_body fs_padded_20">
-                        <div v-if="!feed.triggers.length" class="text-align-center">
+                        <div v-if="!feed.trigger" class="text-align-center">
                             <h3>Please setup a trigger first</h3>
                         </div>
                         <template v-else>

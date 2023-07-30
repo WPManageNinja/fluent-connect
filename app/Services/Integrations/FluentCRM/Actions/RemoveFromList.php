@@ -1,8 +1,8 @@
 <?php
 
-namespace FluentConnect\App\Services\Actions\FluentCRM;
+namespace FluentConnect\App\Services\Integrations\FluentCRM\Triggers;
 
-use FluentConnect\App\Services\Actions\BaseAction;
+use FluentConnect\App\Services\BaseAction;
 use FluentConnect\Framework\Support\Arr;
 use FluentCrm\App\Models\Lists;
 

@@ -1,10 +1,8 @@
 <?php
+namespace FluentConnect\App\Services\Integrations\FluentCRM\Triggers;
 
-namespace FluentConnect\App\Services\Actions\FluentCRM;
-
-use FluentConnect\App\Services\Actions\BaseAction;
+use FluentConnect\App\Services\BaseAction;
 use FluentConnect\Framework\Support\Arr;
-use FluentCrm\App\Models\Subscriber;
 use FluentCrm\App\Models\Tag;
 
 class AddToTag extends BaseAction

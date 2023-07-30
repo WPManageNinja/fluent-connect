@@ -2,10 +2,9 @@
 
 namespace FluentConnect\App\Http\Controllers;
 
-use FluentConnect\App\Models\Feed;
 use FluentConnect\App\Models\Integration;
 use FluentConnect\App\Models\Trigger;
-use FluentConnect\App\Services\ThriveCart\ThriveCart;
+use FluentConnect\App\Services\Integrations\ThriveCart\ThriveCart;
 use FluentConnect\Framework\Request\Request;
 use FluentConnect\Framework\Support\Arr;
 

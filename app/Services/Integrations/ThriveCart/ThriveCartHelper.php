@@ -1,6 +1,6 @@
 <?php
 
-namespace FluentConnect\App\Services\ThriveCart;
+namespace FluentConnect\App\Services\Integrations\ThriveCart;
 
 use FluentConnect\App\Models\Integration;
 use FluentConnect\Framework\Support\Arr;

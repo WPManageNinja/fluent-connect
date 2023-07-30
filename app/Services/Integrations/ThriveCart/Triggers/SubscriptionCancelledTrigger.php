@@ -1,8 +1,9 @@
 <?php
 
-namespace FluentConnect\App\Services\ThriveCart;
+namespace FluentConnect\App\Services\Integrations\ThriveCart\Triggers;
 
-use FluentConnect\App\Services\Triggers\BaseTrigger;
+use FluentConnect\App\Services\BaseTrigger;
+use FluentConnect\App\Services\Integrations\ThriveCart\ThriveCartHelper;
 use FluentConnect\Framework\Support\Arr;
 
 class SubscriptionCancelledTrigger extends BaseTrigger

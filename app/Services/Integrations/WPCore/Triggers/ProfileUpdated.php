@@ -1,15 +1,16 @@
 <?php
 
-namespace FluentConnect\App\Services\Triggers\WP;
+namespace FluentConnect\App\Services\Integrations\WPCore\Triggers;
 
-use FluentConnect\App\Services\Triggers\BaseTrigger;
+use FluentConnect\App\Services\BaseTrigger;
+use FluentConnect\App\Services\Integrations\WPCore\WPHelper;
 use FluentConnect\Framework\Support\Arr;
 
 class ProfileUpdated extends BaseTrigger
 {
     public function __construct()
     {
-        $this->triggerProvider = 'wp';
+        $this->triggerProvider = 'wp_core';
         $this->triggerName = 'profile_update';
         parent::__construct();
     }
@@ -26,15 +27,15 @@ class ProfileUpdated extends BaseTrigger
                 'first_name',
                 'last_name'
             ],
-            'is_enabled' => $this->isEnabled(),
-            'settings_defaults' => $this->getSettingsDefaults()
+            'is_enabled'             => $this->isEnabled(),
+            'settings_defaults'      => $this->getSettingsDefaults()
         ];
     }
 
     public function getSettingsDefaults()
     {
         return [
-            'user_roles'  => []
+            'user_roles' => []
         ];
     }
 
@@ -47,11 +48,11 @@ class ProfileUpdated extends BaseTrigger
                 'placeholder' => 'Select User Roles (Leave blank for all)',
                 'options'     => [
                     [
-                        'id' => 'administrator',
+                        'id'    => 'administrator',
                         'title' => 'Administrator'
                     ]
                 ],
-                'show_id' => false,
+                'show_id'     => false,
                 'is_multiple' => true
             ]
         ];
@@ -66,26 +67,50 @@ class ProfileUpdated extends BaseTrigger
     {
         $user = get_user_by('ID', $args[0]);
 
-        if(!$user) {
+        if (!$user) {
             return false;
         }
 
         $targetRoles = Arr::get($trigger->settings, 'user_roles', []);
 
-        if($targetRoles) {
-            if(!array_intersect((array) $user->roles, $targetRoles)) {
+        if ($targetRoles) {
+            if (!array_intersect((array)$user->roles, $targetRoles)) {
                 return false;
             }
         }
 
         return [
-            'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
-            'name' => $user->display_name,
-            'email' => $user->user_email,
-            'user_id' => $user->ID,
-            '__user' => $user,
+            'first_name'    => $user->first_name,
+            'last_name'     => $user->last_name,
+            'name'          => $user->display_name,
+            'email'         => $user->user_email,
+            'user_id'       => $user->ID,
+            '__user'        => $user,
             '__runner_hash' => $user->ID
         ];
+    }
+
+    public function getSchema($trigger)
+    {
+        return WPHelper::getMockData('WordPress - User (Profile Updated)');
+    }
+
+    public function conditionMatched($trigger, $args)
+    {
+        $user = get_user_by('ID', $args[0]);
+
+        if (!$user) {
+            return false;
+        }
+
+        $targetRoles = Arr::get($trigger->settings, 'user_roles', []);
+
+        if ($targetRoles) {
+            if (!array_intersect((array)$user->roles, $targetRoles)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

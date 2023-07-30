@@ -1,6 +1,6 @@
 <?php
 
-namespace FluentConnect\App\Services\Actions\FluentCRM;
+namespace FluentConnect\App\Services\Integrations\FluentCRM\Triggers;
 
 use FluentConnect\Framework\Support\Arr;
 use FluentCrm\App\Models\Subscriber;

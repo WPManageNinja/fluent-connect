@@ -29,13 +29,13 @@ class FeedsController extends Controller
         $title = sanitize_text_field($request->get('title'));
 
         $feed = Feed::create([
-            'title' => $title,
-            'status' => 'draft',
+            'title'    => $title,
+            'status'   => 'draft',
             'settings' => []
         ]);
 
         return [
-            'feed' => $feed,
+            'feed'    => $feed,
             'message' => __('connect Feed has been successfully created', 'fluent-connect')
         ];
     }
@@ -48,22 +48,22 @@ class FeedsController extends Controller
         $feed->title = sanitize_text_field($feedData['title']);
 
         FeedService::syncActions($feed->id, Arr::get($feedData, 'actions', []));
-        FeedService::syncTriggers($feed->id, Arr::get($feedData, 'triggers', []));
+        FeedService::syncTrigger($feed->id, Arr::get($feedData, 'trigger', []));
 
-        if($feedData['status'] != $feed->status) {
+        if ($feedData['status'] != $feed->status) {
             $newStatus = $feedData['status'];
-            if($newStatus == 'published' && !FeedService::isPublishable($feed->id)) {
+            if ($newStatus == 'published' && !FeedService::isPublishable($feed->id)) {
                 $newStatus = 'draft';
             }
 
             $feed->status = $newStatus;
-        } else if(!FeedService::isPublishable($feed->id)) {
+        } else if (!FeedService::isPublishable($feed->id)) {
             $feed->status = 'draft';
         }
 
         $feed->save();
 
-        if($feed->status == 'published') {
+        if ($feed->status == 'published') {
             do_action('fluent_connect_reindex_triggers');
         }
 
@@ -78,7 +78,7 @@ class FeedsController extends Controller
     {
         $feed = Feed::findOrFail($id);
         $isPublished = false;
-        if(FeedService::isPublishable($id)) {
+        if (FeedService::isPublishable($id)) {
             $feed->status = 'published';
             $isPublished = true;
         } else {
@@ -87,13 +87,13 @@ class FeedsController extends Controller
 
         $message = 'Feed has been successfully published';
 
-        if(!$isPublished) {
+        if (!$isPublished) {
             $message = 'Feed can not be published. Please check if you have published trigger and action';
         }
 
         return [
             'message' => $message,
-            'feed' => $feed
+            'feed'    => $feed
         ];
 
     }
@@ -113,15 +113,19 @@ class FeedsController extends Controller
 
     public function getFeed(Request $request, $id)
     {
-        $feed = Feed::with(['triggers', 'actions'])->findOrFail($id);
+        $feed = Feed::with(['trigger', 'actions'])->findOrFail($id);
+
+        if ($feed->trigger) {
+            $feed->mock_data = $feed->trigger->getSchemaData();
+        }
 
         $data = [
-            'feed' => $feed,
+            'feed'         => $feed,
             'all_triggers' => ConnectStores::getTriggerProviders(true),
-            'all_actions' => ConnectStores::getActionProviders(true)
+            'all_actions'  => ConnectStores::getActionProviders(true)
         ];
 
-        if(in_array('integrations', $request->get('with', []))) {
+        if (in_array('integrations', $request->get('with', []))) {
             $data['integrations'] = Integration::select(['id', 'title', 'provider'])->where('status', 'published')->get();
         }
 
@@ -135,13 +139,13 @@ class FeedsController extends Controller
 
         $triggerClass = ConnectStores::getTriggerClass($triggerProvider, $triggerName);
 
-        if(!$triggerClass) {
+        if (!$triggerClass) {
             return $this->sendError([
                 'message' => 'No Trigger Class found'
             ]);
         }
 
-        $trigger = (object) $request->all();
+        $trigger = (object)$request->all();
 
         return [
             'settings_fields' => $triggerClass->getSettingsFields($trigger)
@@ -155,13 +159,13 @@ class FeedsController extends Controller
 
         $actionClass = ConnectStores::getActionClass($actionProvider, $actionName);
 
-        if(!$actionClass) {
+        if (!$actionClass) {
             return $this->sendError([
                 'message' => 'No Action Class found'
             ]);
         }
 
-        $action = (object) $request->all();
+        $action = (object)$request->all();
 
         return [
             'settings_fields' => $actionClass->getSettingsFields($action)

@@ -1,8 +1,6 @@
 <?php
 
-namespace FluentConnect\App\Services\Triggers;
-
-use FluentConnect\App\Services\ConnectStores;
+namespace FluentConnect\App\Services;
 
 abstract class BaseTrigger
 {
@@ -16,25 +14,25 @@ abstract class BaseTrigger
 
     public function __construct()
     {
-        add_filter('fluent_connect_trigger_'.$this->triggerName.'_arg_num', function ($num) {
+        add_filter('fluent_connect_trigger_' . $this->triggerName . '_arg_num', function ($num) {
             return $this->triggerArgs;
         });
     }
 
     public function __get($name)
     {
-        if($name == 'triggerProvider') {
+        if ($name == 'triggerProvider') {
             return $this->triggerProvider;
         }
-        if($name == 'triggerName') {
+        if ($name == 'triggerName') {
             return $this->triggerName;
         }
 
-        if($name == 'priority') {
+        if ($name == 'priority') {
             return $this->priority;
         }
 
-        if($name == 'triggerArgs') {
+        if ($name == 'triggerArgs') {
             return $this->triggerArgs;
         }
 
@@ -54,4 +52,13 @@ abstract class BaseTrigger
 
     abstract public function getFormattedData($trigger, $args);
 
+    public function getSchema($trigger)
+    {
+        return null;
+    }
+
+    public function conditionMatched($trigger, $args)
+    {
+        return true;
+    }
 }

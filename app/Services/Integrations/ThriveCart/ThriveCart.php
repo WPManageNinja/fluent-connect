@@ -1,10 +1,11 @@
 <?php
 
-namespace FluentConnect\App\Services\ThriveCart;
-
+namespace FluentConnect\App\Services\Integrations\ThriveCart;
 use FluentConnect\App\Models\Integration;
 use FluentConnect\App\Services\ConnectStores;
-use FluentConnect\App\Services\Triggers\WP\ProfileUpdated;
+use FluentConnect\App\Services\Integrations\ThriveCart\Triggers\OrderRefundTrigger;
+use FluentConnect\App\Services\Integrations\ThriveCart\Triggers\OrderSuccessTrigger;
+use FluentConnect\App\Services\Integrations\ThriveCart\Triggers\SubscriptionCancelledTrigger;
 use FluentConnect\Framework\Support\Arr;
 
 class ThriveCart
@@ -87,7 +88,6 @@ class ThriveCart
         $event = str_replace('.', '_', $event);
 
         do_action('fluent_connector_thrivecart_event_' . $event, $hookData);
-
     }
 
 }

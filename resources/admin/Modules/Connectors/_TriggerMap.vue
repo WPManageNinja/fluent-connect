@@ -35,7 +35,7 @@
                     <el-checkbox v-model="trigger.status" true-label="published" false-label="draft">Activate this trigger</el-checkbox>
 
                     <div style="display: block; margin-top: 10px;">
-                        <el-button @click="emitSave()" size="small" type="success">Save</el-button>
+                        <el-button @click="emitSave()" size="small" type="primary">Save Trigger</el-button>
                     </div>
 
                 </div>

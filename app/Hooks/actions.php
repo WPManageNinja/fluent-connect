@@ -17,31 +17,9 @@ $app->addAction('admin_menu', 'AdminMenuHandler@add');
 
 $app->addAction('init', 'WebhookReceiverHandler@route');
 
-
 /*
  * Init Integration Providers
  */
-
-(new \FluentConnect\App\Services\ThriveCart\ThriveCart())->init();
-(new \FluentConnect\App\Services\Actions\ActionsInit())->init();
-
-//\FluentConnect\App\Services\ConnectStores::addTriggerProvider('wp', [
-//    'title'                        => 'WordPress',
-//    'logo'                         => FLUENT_CONNECT_PLUGIN_URL . 'assets/images/wordpress.png',
-//    'description'                  => 'Do actions based on ThriveCart events like order succes, order refunds etc',
-//    'require_integration_selector' => false,
-//    'enabled'                      => true
-//]);
-//
-//\FluentConnect\App\Services\ConnectStores::addTrigger('wp', 'profile_update', \FluentConnect\App\Services\Triggers\WP\ProfileUpdated::class);
+(new \FluentConnect\App\Services\Integrations\BootIntegrations())->init();
 
 (new \FluentConnect\App\Hooks\Handlers\TriggerInitHandler())->init();
-
-if(isset($_REQUEST['connect_test'])) {
-    add_action('init', function () {
-        $mailChimp = new \FluentConnect\App\Migrators\MailChimp\MailChimpMigrator();
-        vdd($mailChimp->getContacts([
-            'list_id' => '300b91e5ed',
-        ], 20, 20));
-    });
-}

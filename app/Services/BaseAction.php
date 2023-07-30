@@ -1,6 +1,6 @@
 <?php
 
-namespace FluentConnect\App\Services\Actions;
+namespace FluentConnect\App\Services;
 
 abstract class BaseAction
 {

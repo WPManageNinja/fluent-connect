@@ -45,10 +45,10 @@ class Feed extends Model
      * One2Many: Feed has to many actions
      * @return \FluentConnect\App\Models\Model Collection
      */
-    public function triggers()
+    public function trigger()
     {
         $class = __NAMESPACE__ . '\Trigger';
-        return $this->hasMany(
+        return $this->hasOne(
             $class, 'feed_id', 'id'
         );
     }

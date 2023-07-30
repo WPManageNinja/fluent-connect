@@ -1,7 +1,6 @@
 <?php
 
-namespace FluentConnect\App\Services\ThriveCart;
-
+namespace FluentConnect\App\Services\Integrations\ThriveCart;
 class Api
 {
     private $apiKey;
