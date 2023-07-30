@@ -1,5 +1,5 @@
 <?php
-namespace FluentConnect\App\Services\Integrations\FluentCRM\Triggers;
+namespace FluentConnect\App\Services\Integrations\FluentCRM\Actions;
 
 use FluentConnect\App\Services\BaseAction;
 use FluentConnect\Framework\Support\Arr;

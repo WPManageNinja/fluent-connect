@@ -1,12 +1,11 @@
 <?php
 namespace FluentConnect\App\Services\Integrations\FluentCRM;
 
-
 use FluentConnect\App\Services\ConnectStores;
-use FluentConnect\App\Services\Integrations\FluentCRM\Triggers\AddToList;
-use FluentConnect\App\Services\Integrations\FluentCRM\Triggers\AddToTag;
-use FluentConnect\App\Services\Integrations\FluentCRM\Triggers\RemoveFromList;
-use FluentConnect\App\Services\Integrations\FluentCRM\Triggers\RemoveFromTag;
+use FluentConnect\App\Services\Integrations\FluentCRM\Actions\AddToList;
+use FluentConnect\App\Services\Integrations\FluentCRM\Actions\AddToTag;
+use FluentConnect\App\Services\Integrations\FluentCRM\Actions\RemoveFromList;
+use FluentConnect\App\Services\Integrations\FluentCRM\Actions\RemoveFromTag;
 
 class FluentCRMInit
 {
@@ -24,6 +23,5 @@ class FluentCRMInit
         ConnectStores::addAction('fluentcrm', 'fconnect_fluentcrm_add_to_list', AddToList::class);
         ConnectStores::addAction('fluentcrm', 'fconnect_fluentcrm_remove_tag', RemoveFromTag::class);
         ConnectStores::addAction('fluentcrm', 'fconnect_fluentcrm_remove_from_list', RemoveFromList::class);
-
     }
 }

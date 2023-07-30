@@ -6,7 +6,7 @@ use FluentConnect\App\Services\BaseAction;
 
 class CreateOrUpdateContact extends BaseAction
 {
-    
+
     public function getInfo()
     {
         // TODO: Implement getInfo() method.
