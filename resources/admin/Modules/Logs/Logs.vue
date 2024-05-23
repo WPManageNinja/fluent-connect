@@ -32,12 +32,12 @@
                     <el-table-column :width="80" label="ID" prop="id"></el-table-column>
                     <el-table-column label="Trigger">
                         <template #default="scope">
-                            {{scope.row.trigger.title}}
+                            {{scope.row.trigger?.title || 'Unknown'}}
                         </template>
                     </el-table-column>
                     <el-table-column :width="150" label="Provider">
                         <template #default="scope">
-                            {{scope.row.trigger.trigger_provider}}
+                            {{scope.row.trigger?.trigger_provider || 'Unknown'}}
                         </template>
                     </el-table-column>
                     <el-table-column :width="100" label="Status" prop="status"></el-table-column>
