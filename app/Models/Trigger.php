@@ -3,7 +3,6 @@
 namespace FluentConnect\App\Models;
 
 use FluentConnect\App\Models\Model;
-use FluentConnect\App\Services\ConnectStores;
 
 class Trigger extends Model
 {
@@ -68,19 +67,5 @@ class Trigger extends Model
         return $this->belongsTo(
             __NAMESPACE__ . '\Integration', 'integration_id', 'id'
         );
-    }
-
-    public function getSchemaData()
-    {
-        $triggerClass = ConnectStores::getTriggerClass($this->trigger_provider, $this->trigger_name);
-
-        if ($triggerClass) {
-            $data = $triggerClass->getSchema($this);
-            if($data) {
-                return array_values($data);
-            }
-        }
-
-        return null;
     }
 }

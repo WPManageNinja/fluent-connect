@@ -2,9 +2,9 @@
 Contributors: techjewel,wpmanageninja
 Tags: ThriveCart, FluentCRM, connector
 Requires at least: 5.0
-Tested up to: 5.8
+Tested up to: 6.3
 Requires PHP: 5.6
-Stable tag: 0.2
+Stable tag: 0.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,6 +63,9 @@ Yes, You need both to make this plugin work.
 
 
 == Changelog ==
+
+= 0.3 (Date: Sep 23, 2023) =
+* Compatibility with FluentCRM Latest Version
 
 = 0.2 (Date: October 25, 2021) =
 * Initial Beta Release

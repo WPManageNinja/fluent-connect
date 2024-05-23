@@ -41,25 +41,29 @@ class FeedService
 
     }
 
-    public static function syncTrigger($feedId, $inputTrigger)
+    public static function syncTriggers($feedId, $inputTriggers)
     {
         $syncIds = [];
 
-        $triggerData = Arr::only($inputTrigger, ['id', 'integration_id', 'priority', 'title', 'trigger_name', 'trigger_provider', 'trigger_scope', 'status', 'settings']);
-        $triggerData = array_filter($triggerData);
+        foreach ($inputTriggers as $index => $inputTrigger) {
 
-        $triggerData['feed_id'] = $feedId;
+            $triggerData = Arr::only($inputTrigger, ['id', 'integration_id', 'priority', 'title', 'trigger_name', 'trigger_provider', 'trigger_scope', 'status', 'settings']);
+            $triggerData = array_filter($triggerData);
 
-        // Check if we have $id
-        if(!empty($inputTrigger['id'])) {
-            $triggerId = absint($inputTrigger['id']);
-            $triggerData['settings'] = maybe_serialize($triggerData['settings']);
-            Trigger::where('id', $triggerId)->update($triggerData);
-            $syncIds[] = $triggerId;
-        } else {
-            // It's a new
-            $newTrigger = Trigger::create($triggerData);
-            $syncIds[] = $newTrigger->id;
+            $triggerData['feed_id'] = $feedId;
+            $triggerData['priority'] = $index + 1;
+
+            // Check if we have $id
+            if(!empty($inputTrigger['id'])) {
+                $triggerId = absint($inputTrigger['id']);
+                $triggerData['settings'] = maybe_serialize($triggerData['settings']);
+                Trigger::where('id', $triggerId)->update($triggerData);
+                $syncIds[] = $triggerId;
+            } else {
+                // It's a new
+                $newTrigger = Trigger::create($triggerData);
+                $syncIds[] = $newTrigger->id;
+            }
         }
 
         Trigger::where('feed_id', $feedId)->whereNotIn('id', $syncIds)->delete();
