@@ -1,6 +1,6 @@
 <template>
-    <div>
-        <el-select :multiple="field.is_multiple" clearable filterable :placeholder="field.placeholder" v-model="modelValue">
+    <div class="fconnect_input_options">
+        <el-select :multiple="field.is_multiple" clearable filterable :placeholder="field.placeholder" v-model="value">
             <el-option-group
                 v-for="group in field.options"
                 :key="group.label"
@@ -25,8 +25,13 @@ export default {
     props: ['field', 'modelValue'],
     emits: ['update:modelValue'],
     watch: {
-        modelValue(value) {
+        value(value) {
             this.$emit('update:modelValue', value);
+        }
+    },
+    data() {
+        return {
+            value: this.modelValue
         }
     }
 }

@@ -88,7 +88,7 @@ export default {
             loading: false,
             pagination: {
                 current_page: 1,
-                per_page: 10,
+                per_page: 15,
                 total: 0
             },
             feeds: [],

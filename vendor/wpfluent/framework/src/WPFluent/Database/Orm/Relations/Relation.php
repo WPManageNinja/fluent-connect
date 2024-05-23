@@ -4,15 +4,29 @@ namespace FluentConnect\Framework\Database\Orm\Relations;
 
 use Closure;
 use FluentConnect\Framework\Support\Arr;
+use FluentConnect\Framework\Support\Helper;
+use FluentConnect\Framework\Support\ForwardsCalls;
+use FluentConnect\Framework\Support\MacroableTrait;
+use FluentConnect\Framework\Support\HelperFunctionsTrait;
+use FluentConnect\Framework\Database\MultipleRecordsFoundException;
 use FluentConnect\Framework\Database\Orm\Model;
 use FluentConnect\Framework\Database\Orm\Builder;
 use FluentConnect\Framework\Database\Orm\Collection;
+use FluentConnect\Framework\Database\Orm\ModelNotFoundException;
 use FluentConnect\Framework\Database\Query\Expression;
 
+/**
+ * @mixin \FluentConnect\Framework\Database\Orm\Builder
+ */
 abstract class Relation
 {
+    use HelperFunctionsTrait;
+    use ForwardsCalls, MacroableTrait {
+        __call as macroCall;
+    }
+
     /**
-     * The Eloquent query builder instance.
+     * The Orm query builder instance.
      *
      * @var \FluentConnect\Framework\Database\Orm\Builder
      */
@@ -40,11 +54,25 @@ abstract class Relation
     protected static $constraints = true;
 
     /**
-     * An array to map class names to their morph names in database.
+     * An array to map class names to their morph names in the database.
      *
      * @var array
      */
-    protected static $morphMap = [];
+    public static $morphMap = [];
+
+    /**
+     * Prevents morph relationships without a morph map.
+     *
+     * @var bool
+     */
+    protected static $requireMorphMap = false;
+
+    /**
+     * The count of self joins.
+     *
+     * @var int
+     */
+    protected static $selfJoinCount = 0;
 
     /**
      * Create a new relation instance.
@@ -60,6 +88,28 @@ abstract class Relation
         $this->related = $query->getModel();
 
         $this->addConstraints();
+    }
+
+    /**
+     * Run a callback with constraints disabled on the relation.
+     *
+     * @param  \Closure  $callback
+     * @return mixed
+     */
+    public static function noConstraints(Closure $callback)
+    {
+        $previous = static::$constraints;
+
+        static::$constraints = false;
+
+        // When resetting the relation where clause, we want to shift the first element
+        // off of the bindings, leaving only the constraints that the developers put
+        // as "extra" on the relationships, and not original relation constraints.
+        try {
+            return $callback();
+        } finally {
+            static::$constraints = $previous;
+        }
     }
 
     /**
@@ -80,7 +130,7 @@ abstract class Relation
     /**
      * Initialize the relation on a set of models.
      *
-     * @param  array   $models
+     * @param  array  $models
      * @param  string  $relation
      * @return array
      */
@@ -89,7 +139,7 @@ abstract class Relation
     /**
      * Match the eagerly loaded results to their parents.
      *
-     * @param  array   $models
+     * @param  array  $models
      * @param  \FluentConnect\Framework\Database\Orm\Collection  $results
      * @param  string  $relation
      * @return array
@@ -114,15 +164,54 @@ abstract class Relation
     }
 
     /**
+     * Execute the query and get the first result if it's the sole matching record.
+     *
+     * @param  array|string  $columns
+     * @return \FluentConnect\Framework\Database\Orm\Model
+     *
+     * @throws \FluentConnect\Framework\Database\Orm\ModelNotFoundException
+     * @throws \FluentConnect\Framework\Database\MultipleRecordsFoundException
+     */
+    public function sole($columns = ['*'])
+    {
+        $result = $this->take(2)->get($columns);
+
+        if ($result->isEmpty()) {
+            throw (new ModelNotFoundException)->setModel(get_class($this->related));
+        }
+
+        if ($result->count() > 1) {
+            throw new MultipleRecordsFoundException;
+        }
+
+        return $result->first();
+    }
+
+    /**
+     * Execute the query as a "select" statement.
+     *
+     * @param  array  $columns
+     * @return \FluentConnect\Framework\Database\Orm\Collection
+     */
+    public function get($columns = ['*'])
+    {
+        return $this->query->get($columns);
+    }
+
+    /**
      * Touch all of the related models for the relationship.
      *
      * @return void
      */
     public function touch()
     {
-        $column = $this->getRelated()->getUpdatedAtColumn();
+        $model = $this->getRelated();
 
-        $this->rawUpdate([$column => $this->getRelated()->freshTimestampString()]);
+        if (! $model::isIgnoringTouch()) {
+            $this->rawUpdate([
+                $model->getUpdatedAtColumn() => $model->freshTimestampString(),
+            ]);
+        }
     }
 
     /**
@@ -133,74 +222,73 @@ abstract class Relation
      */
     public function rawUpdate(array $attributes = [])
     {
-        return $this->query->update($attributes);
+        return $this->query->withoutGlobalScopes()->update($attributes);
     }
 
     /**
      * Add the constraints for a relationship count query.
      *
      * @param  \FluentConnect\Framework\Database\Orm\Builder  $query
-     * @param  \FluentConnect\Framework\Database\Orm\Builder  $parent
+     * @param  \FluentConnect\Framework\Database\Orm\Builder  $parentQuery
      * @return \FluentConnect\Framework\Database\Orm\Builder
      */
-    public function getRelationCountQuery(Builder $query, Builder $parent)
+    public function getRelationExistenceCountQuery(Builder $query, Builder $parentQuery)
     {
-        return $this->getRelationQuery($query, $parent, new Expression('count(*)'));
+        return $this->getRelationExistenceQuery(
+            $query, $parentQuery, new Expression('count(*)')
+        )->setBindings([], 'select');
     }
 
     /**
-     * Add the constraints for a relationship query.
+     * Add the constraints for an internal relationship existence query.
+     *
+     * Essentially, these queries compare on column names like whereColumn.
      *
      * @param  \FluentConnect\Framework\Database\Orm\Builder  $query
-     * @param  \FluentConnect\Framework\Database\Orm\Builder  $parent
-     * @param  array|mixed $columns
+     * @param  \FluentConnect\Framework\Database\Orm\Builder  $parentQuery
+     * @param  array|mixed  $columns
      * @return \FluentConnect\Framework\Database\Orm\Builder
      */
-    public function getRelationQuery(Builder $query, Builder $parent, $columns = ['*'])
+    public function getRelationExistenceQuery(Builder $query, Builder $parentQuery, $columns = ['*'])
     {
-        $query->select($columns);
-
-        $key = $this->wrap($this->getQualifiedParentKeyName());
-
-        return $query->where($this->getHasCompareKey(), '=', new Expression($key));
+        return $query->select($columns)->whereColumn(
+            $this->getQualifiedParentKeyName(), '=', $this->getExistenceCompareKey()
+        );
     }
 
     /**
-     * Run a callback with constraints disabled on the relation.
+     * Get a relationship join table hash.
      *
-     * @param  \Closure  $callback
-     * @return mixed
+     * @param  bool  $incrementJoinCount
+     * @return string
      */
-    public static function noConstraints(Closure $callback)
+    public function getRelationCountHash($incrementJoinCount = true)
     {
-        $previous = static::$constraints;
-
-        static::$constraints = false;
-
-        // When resetting the relation where clause, we want to shift the first element
-        // off of the bindings, leaving only the constraints that the developers put
-        // as "extra" on the relationships, and not original relation constraints.
-        try {
-            $results = call_user_func($callback);
-        } finally {
-            static::$constraints = $previous;
-        }
-
-        return $results;
+        return 'laravel_reserved_'.($incrementJoinCount ? static::$selfJoinCount++ : static::$selfJoinCount);
     }
 
     /**
      * Get all of the primary keys for an array of models.
      *
-     * @param  array   $models
-     * @param  string  $key
+     * @param  array  $models
+     * @param  string|null  $key
      * @return array
      */
     protected function getKeys(array $models, $key = null)
     {
-        return array_unique(array_values(array_map(function ($value) use ($key) {
+        return Collection::make($models)->map(function ($value) use ($key) {
             return $key ? $value->getAttribute($key) : $value->getKey();
-        }, $models)));
+        })->values()->unique(null, true)->sort()->all();
+    }
+
+    /**
+     * Get the query builder that will contain the relationship constraints.
+     *
+     * @return \FluentConnect\Framework\Database\Orm\Builder
+     */
+    protected function getRelationQuery()
+    {
+        return $this->query;
     }
 
     /**
@@ -214,7 +302,7 @@ abstract class Relation
     }
 
     /**
-     * Get the base query builder driving the Eloquent builder.
+     * Get the base query builder driving the Orm builder.
      *
      * @return \FluentConnect\Framework\Database\Query\Builder
      */
@@ -284,14 +372,53 @@ abstract class Relation
     }
 
     /**
-     * Wrap the given value with the parent query's grammar.
+     * Get the name of the "where in" method for eager loading.
      *
-     * @param  string  $value
+     * @param  \FluentConnect\Framework\Database\Orm\Model  $model
+     * @param  string  $key
      * @return string
      */
-    public function wrap($value)
+    protected function whereInMethod(Model $model, $key)
     {
-        return $this->parent->newQueryWithoutScopes()->getQuery()->getGrammar()->wrap($value);
+        return $model->getKeyName() === Helper::last(explode('.', $key))
+                    && in_array($model->getKeyType(), ['int', 'integer'])
+                        ? 'whereIntegerInRaw'
+                        : 'whereIn';
+    }
+
+    /**
+     * Prevent polymorphic relationships from being used without model mappings.
+     *
+     * @param  bool  $requireMorphMap
+     * @return void
+     */
+    public static function requireMorphMap($requireMorphMap = true)
+    {
+        static::$requireMorphMap = $requireMorphMap;
+    }
+
+    /**
+     * Determine if polymorphic relationships require explicit model mapping.
+     *
+     * @return bool
+     */
+    public static function requiresMorphMap()
+    {
+        return static::$requireMorphMap;
+    }
+
+    /**
+     * Define the morph map for polymorphic relations and require all morphed models to be explicitly mapped.
+     *
+     * @param  array  $map
+     * @param  bool  $merge
+     * @return array
+     */
+    public static function enforceMorphMap(array $map, $merge = true)
+    {
+        static::requireMorphMap();
+
+        return static::morphMap($map, $merge);
     }
 
     /**
@@ -306,7 +433,8 @@ abstract class Relation
         $map = static::buildMorphMapFromModels($map);
 
         if (is_array($map)) {
-            static::$morphMap = $merge ? array_merge(static::$morphMap, $map) : $map;
+            static::$morphMap = $merge && static::$morphMap
+                            ? $map + static::$morphMap : $map;
         }
 
         return static::$morphMap;
@@ -324,29 +452,36 @@ abstract class Relation
             return $models;
         }
 
-        $tables = array_map(function ($model) {
+        return array_combine(array_map(function ($model) {
             return (new $model)->getTable();
-        }, $models);
+        }, $models), $models);
+    }
 
-        return array_combine($tables, $models);
+    /**
+     * Get the model associated with a custom polymorphic type.
+     *
+     * @param  string  $alias
+     * @return string|null
+     */
+    public static function getMorphedModel($alias)
+    {
+        return static::$morphMap[$alias] ?? null;
     }
 
     /**
      * Handle dynamic method calls to the relationship.
      *
      * @param  string  $method
-     * @param  array   $parameters
+     * @param  array  $parameters
      * @return mixed
      */
     public function __call($method, $parameters)
     {
-        $result = call_user_func_array([$this->query, $method], $parameters);
-
-        if ($result === $this->query) {
-            return $this;
+        if (static::hasMacro($method)) {
+            return $this->macroCall($method, $parameters);
         }
 
-        return $result;
+        return $this->forwardDecoratedCallTo($this->query, $method, $parameters);
     }
 
     /**

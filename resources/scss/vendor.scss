@@ -5,7 +5,7 @@
     ),
   ),
 );
-@use '~element-plus/packages/theme-chalk/src/index';
+@use '~element-plus/theme-chalk/src/index';
 
 @import "~element-plus/theme-chalk/src/row.scss";
 @import "~element-plus/theme-chalk/src/col.scss";
@@ -161,4 +161,22 @@
         display: block;
         margin: 0 -20px -20px;
     }
+}
+
+.el-input__inner {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.fconnect_input_options {
+    display: block;
+    width: 100%;
+}
+
+input.el-select__input {
+    min-width: 120px;
+    padding: 0 10px !important;
+    min-height: auto;
+    line-height: 1 !important;
+    box-shadow: none !important;
 }

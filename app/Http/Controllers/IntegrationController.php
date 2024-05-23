@@ -6,7 +6,7 @@ use FluentConnect\App\Models\Feed;
 use FluentConnect\App\Models\Integration;
 use FluentConnect\App\Models\Trigger;
 use FluentConnect\App\Services\ThriveCart\ThriveCart;
-use FluentConnect\Framework\Request\Request;
+use FluentConnect\Framework\Http\Request\Request;
 use FluentConnect\Framework\Support\Arr;
 
 class IntegrationController extends Controller
@@ -15,7 +15,7 @@ class IntegrationController extends Controller
     public function index(Request $request)
     {
         return [
-            'integrations' => Integration::paginate()
+            'integrations' => Integration::paginate($request->get('per_page', 15))
         ];
     }
 

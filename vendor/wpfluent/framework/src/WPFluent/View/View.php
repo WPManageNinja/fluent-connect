@@ -6,14 +6,35 @@ use Exception;
 
 class View
 {
+	/**
+     * Application Instance
+     * @var FluentConnect\Framework\Foundation\Application
+     */
 	protected $app;
 
+	/**
+	 * View file path
+	 * 
+	 * @var string
+	 */
 	protected $path;
 
+	/**
+	 * View data
+	 * @var array
+	 */
 	protected $data = [];
-
+	
+	/**
+	 * Shared data inall the views
+	 * @var array
+	 */
 	protected static $sharedData = [];
 
+	/**
+	 * Construct the view instamce
+	 * @param [type] $app [description]
+	 */
 	public function __construct($app)
 	{
 		$this->app = $app;
@@ -27,6 +48,7 @@ class View
 	 */
 	public function render($path, $data = [])
 	{
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $this->make($path, $data);
 	}
 
@@ -39,9 +61,64 @@ class View
 	 */
 	public function make($path, $data = [])
 	{
-		if (file_exists($this->path = $this->resolveFilePath($path))) {
-			$this->data = $data;
+		$path = str_replace('.php', '', $path);
+		
+		if (file_exists($this->path = $path .'.php')) {
+			$this->data = array_merge($this->data, static::$sharedData, $data);
 			return $this;
+		}
+
+		if (strpos($path, ':')) {
+			return $this->loadViewFrom($path, $data);
+		}
+
+		if (strpos($path = str_replace('.', '/', $path), '/') !== false) {
+			if (file_exists($this->path = $path .'.php')) {
+				$this->data = array_merge($this->data, static::$sharedData, $data);
+				return $this;
+			}
+		}
+
+		if (file_exists($this->path = ($path . '.php'))) {
+			$this->data = array_merge($this->data, static::$sharedData, $data);
+			return $this;
+		}
+
+		if (file_exists($this->path = $this->resolveFilePath($path))) {
+			$this->data = array_merge($this->data, static::$sharedData, $data);
+			return $this;
+		}
+
+		throw new Exception("The view file [{$this->path}] doesn't exists!");
+	}
+
+	/**
+	 * Load view from specified location.
+	 * 
+	 * @param  string $path
+	 * @param  array $data
+	 * @return string
+	 * @throws Exception
+	 */
+	public function loadViewFrom($path, $data)
+	{
+		$pieces = explode(':', $path);
+		
+		$ns = reset($pieces);
+		
+		if (is_dir($root = WP_PLUGIN_DIR . '/' . $ns)) {
+
+			if (is_dir($views = $root . '/app/Views')) {
+
+				$path = $views . '/' . end($pieces);
+				
+				$path = str_replace('.', DIRECTORY_SEPARATOR, $path);
+
+				if (file_exists($this->path = ($path . '.php'))) {
+					$this->data = array_merge($this->data, static::$sharedData, $data);
+					return $this;
+				}
+			}
 		}
 
 		throw new Exception("The view file [{$this->path}] doesn't exists!");
@@ -65,28 +142,12 @@ class View
 	 * @param  string $data
 	 * @return $this
 	 */
-	protected function renderContent()
+	protected function renderContent($app)
 	{
-		$renderOutput = function($app) {
-			ob_start() && extract(
-				$this->gatherData(), EXTR_SKIP
-			);
-
-			include $this->path;
-
-			return ltrim(ob_get_clean());
-		};
-
-		return $renderOutput($this->app);
-	}
-
-	/**
-	 * Gether shared & view data
-	 * @return array
-	 */
-	protected function gatherData()
-	{
-		return array_merge(static::$sharedData, $this->data);
+		ob_start();
+		extract($this->data, EXTR_SKIP);
+		require $this->path;
+		return ltrim(ob_get_clean());
 	}
 
 	/**
@@ -115,8 +176,29 @@ class View
 		} else {
 			$this->__set($name, $data);
 		}
-
+		
 		return $this;
+	}
+
+	/**
+	 * Set view path (used for micro)
+	 * @param [type] $path [description]
+	 */
+	public function setViewPath($path)
+	{
+		$this->app['path.views'] = $path;
+	}
+
+	/**
+	 * Getter for the view
+	 * @param string $key
+	 * @param mixed $value
+	 */
+	public function __get($key)
+	{
+		if (isset($this->data[$key])) {
+			return $this->data[$key];
+		}
 	}
 
 	/**
@@ -135,6 +217,6 @@ class View
 	 */
 	public function __toString()
 	{
-		return $this->renderContent();
+		return $this->renderContent($this->app);
 	}
 }

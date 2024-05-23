@@ -5,7 +5,7 @@ namespace FluentConnect\App\Http\Controllers;
 use FluentConnect\App\Models\ActionLog;
 use FluentConnect\App\Models\FeedRunner;
 use FluentConnect\App\Models\Integration;
-use FluentConnect\Framework\Request\Request;
+use FluentConnect\Framework\Http\Request\Request;
 use FluentConnect\Framework\Support\Arr;
 
 class ReportsController extends Controller

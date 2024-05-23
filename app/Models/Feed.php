@@ -24,6 +24,7 @@ class Feed extends Model
 
     public static function boot()
     {
+        parent::boot();
         static::creating(function ($model) {
             $model->created_by = get_current_user_id();
             $model->created_at = current_time('mysql');

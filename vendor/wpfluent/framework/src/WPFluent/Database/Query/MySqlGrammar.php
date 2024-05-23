@@ -3,59 +3,117 @@
 namespace FluentConnect\Framework\Database\Query;
 
 use FluentConnect\Framework\Support\Str;
-use FluentConnect\Framework\Database\Query\Grammar;
+use FluentConnect\Framework\Support\Helper;
 use FluentConnect\Framework\Database\Query\Builder;
-use FluentConnect\Framework\Database\Query\JsonExpression;
 
 class MySqlGrammar extends Grammar
 {
     /**
-     * The components that make up a select clause.
+     * The grammar specific operators.
      *
-     * @var array
+     * @var string[]
      */
-    protected $selectComponents = [
-        'aggregate',
-        'columns',
-        'from',
-        'joins',
-        'wheres',
-        'groups',
-        'havings',
-        'orders',
-        'limit',
-        'offset',
-        'lock',
-    ];
+    protected $operators = ['sounds like'];
 
     /**
-     * Compile a select query into SQL.
+     * Add a "where null" clause to the query.
      *
      * @param  \FluentConnect\Framework\Database\Query\Builder  $query
+     * @param  array  $where
      * @return string
      */
-    public function compileSelect(Builder $query)
+    protected function whereNull(Builder $query, $where)
     {
-        $sql = parent::compileSelect($query);
+        if ($this->isJsonSelector($where['column'])) {
+            [$field, $path] = $this->wrapJsonFieldAndPath($where['column']);
 
-        if ($query->unions) {
-            $sql = '('.$sql.') '.$this->compileUnions($query);
+            return '(json_extract('.$field.$path.') is null OR json_type(json_extract('.$field.$path.')) = \'NULL\')';
         }
 
-        return $sql;
+        return parent::whereNull($query, $where);
     }
 
     /**
-     * Compile a single union statement.
+     * Add a "where not null" clause to the query.
      *
-     * @param  array  $union
+     * @param  \FluentConnect\Framework\Database\Query\Builder  $query
+     * @param  array  $where
      * @return string
      */
-    protected function compileUnion(array $union)
+    protected function whereNotNull(Builder $query, $where)
     {
-        $joiner = $union['all'] ? ' union all ' : ' union ';
+        if ($this->isJsonSelector($where['column'])) {
+            [$field, $path] = $this->wrapJsonFieldAndPath($where['column']);
 
-        return $joiner.'('.$union['query']->toSql().')';
+            return '(json_extract('.$field.$path.') is not null AND json_type(json_extract('.$field.$path.')) != \'NULL\')';
+        }
+
+        return parent::whereNotNull($query, $where);
+    }
+
+    /**
+     * Compile a "where fulltext" clause.
+     *
+     * @param  \FluentConnect\Framework\Database\Query\Builder  $query
+     * @param  array  $where
+     * @return string
+     */
+    public function whereFullText(Builder $query, $where)
+    {
+        $columns = $this->columnize($where['columns']);
+
+        $value = $this->parameter($where['value']);
+
+        $mode = ($where['options']['mode'] ?? []) === 'boolean'
+            ? ' in boolean mode'
+            : ' in natural language mode';
+
+        $expanded = ($where['options']['expanded'] ?? []) && ($where['options']['mode'] ?? []) !== 'boolean'
+            ? ' with query expansion'
+            : '';
+
+        return "match ({$columns}) against (".$value."{$mode}{$expanded})";
+    }
+
+    /**
+     * Compile an insert ignore statement into SQL.
+     *
+     * @param  \FluentConnect\Framework\Database\Query\Builder  $query
+     * @param  array  $values
+     * @return string
+     */
+    public function compileInsertOrIgnore(Builder $query, array $values)
+    {
+        return Str::replaceFirst('insert', 'insert ignore', $this->compileInsert($query, $values));
+    }
+
+    /**
+     * Compile a "JSON contains" statement into SQL.
+     *
+     * @param  string  $column
+     * @param  string  $value
+     * @return string
+     */
+    protected function compileJsonContains($column, $value)
+    {
+        [$field, $path] = $this->wrapJsonFieldAndPath($column);
+
+        return 'json_contains('.$field.', '.$value.$path.')';
+    }
+
+    /**
+     * Compile a "JSON length" statement into SQL.
+     *
+     * @param  string  $column
+     * @param  string  $operator
+     * @param  string  $value
+     * @return string
+     */
+    protected function compileJsonLength($column, $operator, $value)
+    {
+        [$field, $path] = $this->wrapJsonFieldAndPath($column);
+
+        return 'json_length('.$field.$path.') '.$operator.' '.$value;
     }
 
     /**
@@ -78,58 +136,105 @@ class MySqlGrammar extends Grammar
      */
     protected function compileLock(Builder $query, $value)
     {
-        if (is_string($value)) {
-            return $value;
+        if (! is_string($value)) {
+            return $value ? 'for update' : 'lock in share mode';
         }
 
-        return $value ? 'for update' : 'lock in share mode';
+        return $value;
     }
 
     /**
-     * Compile an update statement into SQL.
+     * Compile an insert statement into SQL.
      *
      * @param  \FluentConnect\Framework\Database\Query\Builder  $query
      * @param  array  $values
      * @return string
      */
-    public function compileUpdate(Builder $query, $values)
+    public function compileInsert(Builder $query, array $values)
     {
-        $table = $this->wrapTable($query->from);
+        if (empty($values)) {
+            $values = [[]];
+        }
 
-        $columns = [];
+        return parent::compileInsert($query, $values);
+    }
 
-        // Each one of the columns in the update statements needs to be wrapped in the
-        // keyword identifiers, also a place-holder needs to be created for each of
-        // the values in the list of bindings so we can make the sets statements.
-        foreach ($values as $key => $value) {
+    /**
+     * Compile the columns for an update statement.
+     *
+     * @param  \FluentConnect\Framework\Database\Query\Builder  $query
+     * @param  array  $values
+     * @return string
+     */
+    protected function compileUpdateColumns(Builder $query, array $values)
+    {
+        return Helper::collect($values)->map(function ($value, $key) {
             if ($this->isJsonSelector($key)) {
-                $columns[] = $this->compileJsonUpdateColumn(
-                    $key, new JsonExpression($value)
-                );
-            } else {
-                $columns[] = $this->wrap($key).' = '.$this->parameter($value);
+                return $this->compileJsonUpdateColumn($key, $value);
             }
-        }
 
-        $columns = implode(', ', $columns);
+            return $this->wrap($key).' = '.$this->parameter($value);
+        })->implode(', ');
+    }
 
-        // If the query has any "join" clauses, we will setup the joins on the builder
-        // and compile them so we can attach them to this update, as update queries
-        // can get join statements to attach to other tables when they're needed.
-        if (isset($query->joins)) {
-            $joins = ' '.$this->compileJoins($query, $query->joins);
+    /**
+     * Compile an "upsert" statement into SQL.
+     *
+     * @param  \FluentConnect\Framework\Database\Query\Builder  $query
+     * @param  array  $values
+     * @param  array  $uniqueBy
+     * @param  array  $update
+     * @return string
+     */
+    public function compileUpsert(Builder $query, array $values, array $uniqueBy, array $update)
+    {
+        $sql = $this->compileInsert($query, $values).' on duplicate key update ';
+
+        $columns = Helper::collect($update)->map(function ($value, $key) {
+            return is_numeric($key)
+                ? $this->wrap($value).' = values('.$this->wrap($value).')'
+                : $this->wrap($key).' = '.$this->parameter($value);
+        })->implode(', ');
+
+        return $sql.$columns;
+    }
+
+    /**
+     * Prepare a JSON column being updated using the JSON_SET function.
+     *
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return string
+     */
+    protected function compileJsonUpdateColumn($key, $value)
+    {
+        if (is_bool($value)) {
+            $value = $value ? 'true' : 'false';
+        } elseif (is_array($value)) {
+            $value = 'cast(? as json)';
         } else {
-            $joins = '';
+            $value = $this->parameter($value);
         }
 
-        // Of course, update queries may also be constrained by where clauses so we'll
-        // need to compile the where clauses and attach it to the query so only the
-        // intended records are updated by the SQL statements we generate to run.
-        $where = $this->compileWheres($query);
+        [$field, $path] = $this->wrapJsonFieldAndPath($key);
 
-        $sql = rtrim("update {$table}{$joins} set $columns $where");
+        return "{$field} = json_set({$field}{$path}, {$value})";
+    }
 
-        if (isset($query->orders)) {
+    /**
+     * Compile an update statement without joins into SQL.
+     *
+     * @param  \FluentConnect\Framework\Database\Query\Builder  $query
+     * @param  string  $table
+     * @param  string  $columns
+     * @param  string  $where
+     * @return string
+     */
+    protected function compileUpdateWithoutJoins(Builder $query, $table, $columns, $where)
+    {
+        $sql = parent::compileUpdateWithoutJoins($query, $table, $columns, $where);
+
+        if (! empty($query->orders)) {
             $sql .= ' '.$this->compileOrders($query, $query->orders);
         }
 
@@ -137,29 +242,13 @@ class MySqlGrammar extends Grammar
             $sql .= ' '.$this->compileLimit($query, $query->limit);
         }
 
-        return rtrim($sql);
-    }
-
-    /**
-     * Prepares a JSON column being updated using the JSON_SET function.
-     *
-     * @param  string  $key
-     * @param  \FluentConnect\Framework\Database\Query\JsonExpression  $value
-     * @return string
-     */
-    protected function compileJsonUpdateColumn($key, JsonExpression $value)
-    {
-        $path = explode('->', $key);
-
-        $field = $this->wrapValue(array_shift($path));
-
-        $accessor = '"$.'.implode('.', $path).'"';
-
-        return "{$field} = json_set({$field}, {$accessor}, {$value->getValue()})";
+        return $sql;
     }
 
     /**
      * Prepare the bindings for an update statement.
+     *
+     * Booleans, integers, and doubles are inserted into JSON updates as raw values.
      *
      * @param  array  $bindings
      * @param  array  $values
@@ -167,45 +256,36 @@ class MySqlGrammar extends Grammar
      */
     public function prepareBindingsForUpdate(array $bindings, array $values)
     {
-        $index = 0;
+        $values = Helper::collect($values)->reject(function ($value, $column) {
+            return $this->isJsonSelector($column) && is_bool($value);
+        })->map(function ($value) {
+            return is_array($value) ? json_encode($value) : $value;
+        })->all();
 
-        foreach ($values as $column => $value) {
-            if ($this->isJsonSelector($column) && is_bool($value)) {
-                unset($bindings[$index]);
-            }
-
-            $index++;
-        }
-
-        return $bindings;
+        return parent::prepareBindingsForUpdate($bindings, $values);
     }
 
     /**
-     * Compile a delete statement into SQL.
+     * Compile a delete query that does not use joins.
      *
      * @param  \FluentConnect\Framework\Database\Query\Builder  $query
+     * @param  string  $table
+     * @param  string  $where
      * @return string
      */
-    public function compileDelete(Builder $query)
+    protected function compileDeleteWithoutJoins(Builder $query, $table, $where)
     {
-        $table = $this->wrapTable($query->from);
+        $sql = parent::compileDeleteWithoutJoins($query, $table, $where);
 
-        $where = is_array($query->wheres) ? $this->compileWheres($query) : '';
+        // When using MySQL, delete statements may contain order by statements and limits
+        // so we will compile both of those here. Once we have finished compiling this
+        // we will return the completed SQL statement so it will be executed for us.
+        if (! empty($query->orders)) {
+            $sql .= ' '.$this->compileOrders($query, $query->orders);
+        }
 
-        if (isset($query->joins)) {
-            $joins = ' '.$this->compileJoins($query, $query->joins);
-
-            $sql = trim("delete $table from {$table}{$joins} $where");
-        } else {
-            $sql = trim("delete from $table $where");
-
-            if (isset($query->orders)) {
-                $sql .= ' '.$this->compileOrders($query, $query->orders);
-            }
-
-            if (isset($query->limit)) {
-                $sql .= ' '.$this->compileLimit($query, $query->limit);
-            }
+        if (isset($query->limit)) {
+            $sql .= ' '.$this->compileLimit($query, $query->limit);
         }
 
         return $sql;
@@ -219,15 +299,7 @@ class MySqlGrammar extends Grammar
      */
     protected function wrapValue($value)
     {
-        if ($value === '*') {
-            return $value;
-        }
-
-        if ($this->isJsonSelector($value)) {
-            return $this->wrapJsonSelector($value);
-        }
-
-        return '`'.str_replace('`', '``', $value).'`';
+        return $value === '*' ? $value : '`'.str_replace('`', '``', $value).'`';
     }
 
     /**
@@ -238,21 +310,21 @@ class MySqlGrammar extends Grammar
      */
     protected function wrapJsonSelector($value)
     {
-        $path = explode('->', $value);
+        [$field, $path] = $this->wrapJsonFieldAndPath($value);
 
-        $field = $this->wrapValue(array_shift($path));
-
-        return $field.'->'.'"$.'.implode('.', $path).'"';
+        return 'json_unquote(json_extract('.$field.$path.'))';
     }
 
     /**
-     * Determine if the given string is a JSON selector.
+     * Wrap the given JSON selector for boolean values.
      *
      * @param  string  $value
-     * @return bool
+     * @return string
      */
-    protected function isJsonSelector($value)
+    protected function wrapJsonBooleanSelector($value)
     {
-        return Str::contains($value, '->');
+        [$field, $path] = $this->wrapJsonFieldAndPath($value);
+
+        return 'json_extract('.$field.$path.')';
     }
 }

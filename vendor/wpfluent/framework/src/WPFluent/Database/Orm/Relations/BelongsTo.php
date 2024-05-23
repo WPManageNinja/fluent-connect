@@ -5,10 +5,23 @@ namespace FluentConnect\Framework\Database\Orm\Relations;
 use FluentConnect\Framework\Database\Orm\Model;
 use FluentConnect\Framework\Database\Orm\Builder;
 use FluentConnect\Framework\Database\Orm\Collection;
-use FluentConnect\Framework\Database\Query\Expression;
+use FluentConnect\Framework\Database\Orm\Relations\Concerns\ComparesRelatedModels;
+use FluentConnect\Framework\Database\Orm\Relations\Concerns\InteractsWithDictionary;
+use FluentConnect\Framework\Database\Orm\Relations\Concerns\SupportsDefaultModels;
 
 class BelongsTo extends Relation
 {
+    use ComparesRelatedModels,
+        InteractsWithDictionary,
+        SupportsDefaultModels;
+
+    /**
+     * The child model instance of the relation.
+     *
+     * @var \FluentConnect\Framework\Database\Orm\Model
+     */
+    protected $child;
+
     /**
      * The foreign key of the parent model.
      *
@@ -21,39 +34,37 @@ class BelongsTo extends Relation
      *
      * @var string
      */
-    protected $otherKey;
+    protected $ownerKey;
 
     /**
      * The name of the relationship.
      *
      * @var string
      */
-    protected $relation;
-
-    /**
-     * The count of self joins.
-     *
-     * @var int
-     */
-    protected static $selfJoinCount = 0;
+    protected $relationName;
 
     /**
      * Create a new belongs to relationship instance.
      *
      * @param  \FluentConnect\Framework\Database\Orm\Builder  $query
-     * @param  \FluentConnect\Framework\Database\Orm\Model  $parent
+     * @param  \FluentConnect\Framework\Database\Orm\Model  $child
      * @param  string  $foreignKey
-     * @param  string  $otherKey
-     * @param  string  $relation
+     * @param  string  $ownerKey
+     * @param  string  $relationName
      * @return void
      */
-    public function __construct(Builder $query, Model $parent, $foreignKey, $otherKey, $relation)
+    public function __construct(Builder $query, Model $child, $foreignKey, $ownerKey, $relationName)
     {
-        $this->otherKey = $otherKey;
-        $this->relation = $relation;
+        $this->ownerKey = $ownerKey;
+        $this->relationName = $relationName;
         $this->foreignKey = $foreignKey;
 
-        parent::__construct($query, $parent);
+        // In the underlying base relationship class, this variable is referred to as
+        // the "parent" since most relationships are not inversed. But, since this
+        // one is we will create a "child" variable for much better readability.
+        $this->child = $child;
+
+        parent::__construct($query, $child);
     }
 
     /**
@@ -63,7 +74,11 @@ class BelongsTo extends Relation
      */
     public function getResults()
     {
-        return $this->query->first();
+        if (is_null($this->child->{$this->foreignKey})) {
+            return $this->getDefaultFor($this->parent);
+        }
+
+        return $this->query->first() ?: $this->getDefaultFor($this->parent);
     }
 
     /**
@@ -79,60 +94,8 @@ class BelongsTo extends Relation
             // of the related models matching on the foreign key that's on a parent.
             $table = $this->related->getTable();
 
-            $this->query->where($table.'.'.$this->otherKey, '=', $this->parent->{$this->foreignKey});
+            $this->query->where($table.'.'.$this->ownerKey, '=', $this->child->{$this->foreignKey});
         }
-    }
-
-    /**
-     * Add the constraints for a relationship query.
-     *
-     * @param  \FluentConnect\Framework\Database\Orm\Builder  $query
-     * @param  \FluentConnect\Framework\Database\Orm\Builder  $parent
-     * @param  array|mixed  $columns
-     * @return \FluentConnect\Framework\Database\Orm\Builder
-     */
-    public function getRelationQuery(Builder $query, Builder $parent, $columns = ['*'])
-    {
-        if ($parent->getQuery()->from == $query->getQuery()->from) {
-            return $this->getRelationQueryForSelfRelation($query, $parent, $columns);
-        }
-
-        $query->select($columns);
-
-        $otherKey = $this->wrap($query->getModel()->getTable().'.'.$this->otherKey);
-
-        return $query->where($this->getQualifiedForeignKey(), '=', new Expression($otherKey));
-    }
-
-    /**
-     * Add the constraints for a relationship query on the same table.
-     *
-     * @param  \FluentConnect\Framework\Database\Orm\Builder  $query
-     * @param  \FluentConnect\Framework\Database\Orm\Builder  $parent
-     * @param  array|mixed  $columns
-     * @return \FluentConnect\Framework\Database\Orm\Builder
-     */
-    public function getRelationQueryForSelfRelation(Builder $query, Builder $parent, $columns = ['*'])
-    {
-        $query->select($columns);
-
-        $query->from($query->getModel()->getTable().' as '.$hash = $this->getRelationCountHash());
-
-        $query->getModel()->setTable($hash);
-
-        $key = $this->wrap($this->getQualifiedForeignKey());
-
-        return $query->where($hash.'.'.$query->getModel()->getKeyName(), '=', new Expression($key));
-    }
-
-    /**
-     * Get a relationship join table hash.
-     *
-     * @return string
-     */
-    public function getRelationCountHash()
-    {
-        return 'laravel_reserved_'.static::$selfJoinCount++;
     }
 
     /**
@@ -146,9 +109,11 @@ class BelongsTo extends Relation
         // We'll grab the primary key name of the related models since it could be set to
         // a non-standard name and not "id". We will then construct the constraint for
         // our eagerly loading query so it returns the proper models from execution.
-        $key = $this->related->getTable().'.'.$this->otherKey;
+        $key = $this->related->getTable().'.'.$this->ownerKey;
 
-        $this->query->whereIn($key, $this->getEagerModelKeys($models));
+        $whereIn = $this->whereInMethod($this->related, $this->ownerKey);
+
+        $this->query->{$whereIn}($key, $this->getEagerModelKeys($models));
     }
 
     /**
@@ -170,12 +135,7 @@ class BelongsTo extends Relation
             }
         }
 
-        // If there are no keys that were not null we will just return an array with either
-        // null or 0 in (depending on if incrementing keys are in use) so the query wont
-        // fail plus returns zero results, which should be what the developer expects.
-        if (count($keys) === 0) {
-            return [$this->related->getIncrementing() ? 0 : null];
-        }
+        sort($keys);
 
         return array_values(array_unique($keys));
     }
@@ -183,14 +143,14 @@ class BelongsTo extends Relation
     /**
      * Initialize the relation on a set of models.
      *
-     * @param  array   $models
+     * @param  array  $models
      * @param  string  $relation
      * @return array
      */
     public function initRelation(array $models, $relation)
     {
         foreach ($models as $model) {
-            $model->setRelation($relation, null);
+            $model->setRelation($relation, $this->getDefaultFor($model));
         }
 
         return $models;
@@ -199,7 +159,7 @@ class BelongsTo extends Relation
     /**
      * Match the eagerly loaded results to their parents.
      *
-     * @param  array   $models
+     * @param  array  $models
      * @param  \FluentConnect\Framework\Database\Orm\Collection  $results
      * @param  string  $relation
      * @return array
@@ -208,7 +168,7 @@ class BelongsTo extends Relation
     {
         $foreign = $this->foreignKey;
 
-        $other = $this->otherKey;
+        $owner = $this->ownerKey;
 
         // First we will get to build a dictionary of the child models by their primary
         // key of the relationship, then we can easily match the children back onto
@@ -216,15 +176,19 @@ class BelongsTo extends Relation
         $dictionary = [];
 
         foreach ($results as $result) {
-            $dictionary[$result->getAttribute($other)] = $result;
+            $attribute = $this->getDictionaryKey($result->getAttribute($owner));
+
+            $dictionary[$attribute] = $result;
         }
 
         // Once we have the dictionary constructed, we can loop through all the parents
         // and match back onto their children using these keys of the dictionary and
         // the primary key of the children to map them onto the correct instances.
         foreach ($models as $model) {
-            if (isset($dictionary[$model->$foreign])) {
-                $model->setRelation($relation, $dictionary[$model->$foreign]);
+            $attribute = $this->getDictionaryKey($model->{$foreign});
+
+            if (isset($dictionary[$attribute])) {
+                $model->setRelation($relation, $dictionary[$attribute]);
             }
         }
 
@@ -234,20 +198,22 @@ class BelongsTo extends Relation
     /**
      * Associate the model instance to the given parent.
      *
-     * @param  \FluentConnect\Framework\Database\Orm\Model|int  $model
+     * @param  \FluentConnect\Framework\Database\Orm\Model|int|string|null  $model
      * @return \FluentConnect\Framework\Database\Orm\Model
      */
     public function associate($model)
     {
-        $otherKey = ($model instanceof Model ? $model->getAttribute($this->otherKey) : $model);
+        $ownerKey = $model instanceof Model ? $model->getAttribute($this->ownerKey) : $model;
 
-        $this->parent->setAttribute($this->foreignKey, $otherKey);
+        $this->child->setAttribute($this->foreignKey, $ownerKey);
 
         if ($model instanceof Model) {
-            $this->parent->setRelation($this->relation, $model);
+            $this->child->setRelation($this->relationName, $model);
+        } else {
+            $this->child->unsetRelation($this->relationName);
         }
 
-        return $this->parent;
+        return $this->child;
     }
 
     /**
@@ -257,22 +223,91 @@ class BelongsTo extends Relation
      */
     public function dissociate()
     {
-        $this->parent->setAttribute($this->foreignKey, null);
+        $this->child->setAttribute($this->foreignKey, null);
 
-        return $this->parent->setRelation($this->relation, null);
+        return $this->child->setRelation($this->relationName, null);
     }
 
     /**
-     * Update the parent model on the relationship.
+     * Alias of "dissociate" method.
      *
-     * @param  array  $attributes
-     * @return mixed
+     * @return \FluentConnect\Framework\Database\Orm\Model
      */
-    public function update(array $attributes)
+    public function disassociate()
     {
-        $instance = $this->getResults();
+        return $this->dissociate();
+    }
 
-        return $instance->fill($attributes)->save();
+    /**
+     * Add the constraints for a relationship query.
+     *
+     * @param  \FluentConnect\Framework\Database\Orm\Builder  $query
+     * @param  \FluentConnect\Framework\Database\Orm\Builder  $parentQuery
+     * @param  array|mixed  $columns
+     * @return \FluentConnect\Framework\Database\Orm\Builder
+     */
+    public function getRelationExistenceQuery(Builder $query, Builder $parentQuery, $columns = ['*'])
+    {
+        if ($parentQuery->getQuery()->from == $query->getQuery()->from) {
+            return $this->getRelationExistenceQueryForSelfRelation($query, $parentQuery, $columns);
+        }
+
+        return $query->select($columns)->whereColumn(
+            $this->getQualifiedForeignKeyName(), '=', $query->qualifyColumn($this->ownerKey)
+        );
+    }
+
+    /**
+     * Add the constraints for a relationship query on the same table.
+     *
+     * @param  \FluentConnect\Framework\Database\Orm\Builder  $query
+     * @param  \FluentConnect\Framework\Database\Orm\Builder  $parentQuery
+     * @param  array|mixed  $columns
+     * @return \FluentConnect\Framework\Database\Orm\Builder
+     */
+    public function getRelationExistenceQueryForSelfRelation(Builder $query, Builder $parentQuery, $columns = ['*'])
+    {
+        $query->select($columns)->from(
+            $query->getModel()->getTable().' as '.$hash = $this->getRelationCountHash()
+        );
+
+        $query->getModel()->setTable($hash);
+
+        return $query->whereColumn(
+            $hash.'.'.$this->ownerKey, '=', $this->getQualifiedForeignKeyName()
+        );
+    }
+
+    /**
+     * Determine if the related model has an auto-incrementing ID.
+     *
+     * @return bool
+     */
+    protected function relationHasIncrementingId()
+    {
+        return $this->related->getIncrementing() &&
+            in_array($this->related->getKeyType(), ['int', 'integer']);
+    }
+
+    /**
+     * Make a new related instance for the given model.
+     *
+     * @param  \FluentConnect\Framework\Database\Orm\Model  $parent
+     * @return \FluentConnect\Framework\Database\Orm\Model
+     */
+    protected function newRelatedInstanceFor(Model $parent)
+    {
+        return $this->related->newInstance();
+    }
+
+    /**
+     * Get the child of the relationship.
+     *
+     * @return \FluentConnect\Framework\Database\Orm\Model
+     */
+    public function getChild()
+    {
+        return $this->child;
     }
 
     /**
@@ -280,7 +315,7 @@ class BelongsTo extends Relation
      *
      * @return string
      */
-    public function getForeignKey()
+    public function getForeignKeyName()
     {
         return $this->foreignKey;
     }
@@ -290,9 +325,19 @@ class BelongsTo extends Relation
      *
      * @return string
      */
-    public function getQualifiedForeignKey()
+    public function getQualifiedForeignKeyName()
     {
-        return $this->parent->getTable().'.'.$this->foreignKey;
+        return $this->child->qualifyColumn($this->foreignKey);
+    }
+
+    /**
+     * Get the key value of the child's foreign key.
+     *
+     * @return mixed
+     */
+    public function getParentKey()
+    {
+        return $this->child->{$this->foreignKey};
     }
 
     /**
@@ -300,9 +345,9 @@ class BelongsTo extends Relation
      *
      * @return string
      */
-    public function getOtherKey()
+    public function getOwnerKeyName()
     {
-        return $this->otherKey;
+        return $this->ownerKey;
     }
 
     /**
@@ -310,8 +355,29 @@ class BelongsTo extends Relation
      *
      * @return string
      */
-    public function getQualifiedOtherKeyName()
+    public function getQualifiedOwnerKeyName()
     {
-        return $this->related->getTable().'.'.$this->otherKey;
+        return $this->related->qualifyColumn($this->ownerKey);
+    }
+
+    /**
+     * Get the value of the model's associated key.
+     *
+     * @param  \FluentConnect\Framework\Database\Orm\Model  $model
+     * @return mixed
+     */
+    protected function getRelatedKeyFrom(Model $model)
+    {
+        return $model->{$this->ownerKey};
+    }
+
+    /**
+     * Get the name of the relationship.
+     *
+     * @return string
+     */
+    public function getRelationName()
+    {
+        return $this->relationName;
     }
 }

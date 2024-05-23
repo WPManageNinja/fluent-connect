@@ -2,7 +2,7 @@
 
 namespace FluentConnect\App\Http\Controllers;
 
-use FluentConnect\Framework\Request\Request;
+use FluentConnect\Framework\Http\Request\Request;
 
 class WelcomeController extends Controller
 {

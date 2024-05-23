@@ -3,7 +3,7 @@
 namespace FluentConnect\App\Http\Controllers;
 
 use FluentConnect\App\Models\FeedRunner;
-use FluentConnect\Framework\Request\Request;
+use FluentConnect\Framework\Http\Request\Request;
 
 class LogsController extends Controller
 {
@@ -11,7 +11,7 @@ class LogsController extends Controller
     {
         $runners = FeedRunner::with(['trigger', 'actionLogs'])
             ->orderBy('id', 'DESC')
-            ->paginate();
+            ->paginate($request->get('per_page', 15));
 
         return [
             'logs' => $runners

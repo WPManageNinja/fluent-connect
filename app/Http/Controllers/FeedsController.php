@@ -8,7 +8,7 @@ use FluentConnect\App\Models\Integration;
 use FluentConnect\App\Models\Trigger;
 use FluentConnect\App\Services\ConnectStores;
 use FluentConnect\App\Services\FeedService;
-use FluentConnect\Framework\Request\Request;
+use FluentConnect\Framework\Http\Request\Request;
 use FluentConnect\Framework\Support\Arr;
 
 class FeedsController extends Controller
@@ -16,7 +16,7 @@ class FeedsController extends Controller
     public function get(Request $request)
     {
         return [
-            'feeds' => Feed::orderBy('id', 'DESC')->paginate()
+            'feeds' => Feed::query()->orderBy('id', 'DESC')->paginate($request->get('per_page', 15))
         ];
     }
 

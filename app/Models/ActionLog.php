@@ -27,6 +27,7 @@ class ActionLog extends Model
 
     public static function boot()
     {
+        parent::boot();
         static::creating(function ($model) {
             $model->created_at = current_time('mysql');
             $model->updated_at = current_time('mysql');

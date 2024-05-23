@@ -1,5 +1,5 @@
 <template>
-    <el-input :type="field.data_type" :placeholder="field.placeholder" v-model="modelValue">
+    <el-input :type="field.data_type" :placeholder="field.placeholder" v-model="value">
     </el-input>
 </template>
 
@@ -9,8 +9,13 @@ export default {
     props: ['field', 'modelValue', 'suggests'],
     emits: ['update:modelValue'],
     watch: {
-        modelValue(value) {
+        value(value) {
             this.$emit('update:modelValue', value);
+        }
+    },
+    data() {
+        return {
+            value: this.modelValue
         }
     }
 }
