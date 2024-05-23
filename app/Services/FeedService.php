@@ -22,7 +22,7 @@ class FeedService
             $actionData['priority'] = $index + 1;
 
             // Check if we have $id
-            if(!empty($inputTrigger['id'])) {
+            if (!empty($inputTrigger['id'])) {
                 unset($actionData['id']);
                 $actionData['settings'] = maybe_serialize($actionData['settings']);
                 $triggerId = absint($inputTrigger['id']);
@@ -54,7 +54,7 @@ class FeedService
             $triggerData['priority'] = $index + 1;
 
             // Check if we have $id
-            if(!empty($inputTrigger['id'])) {
+            if (!empty($inputTrigger['id'])) {
                 $triggerId = absint($inputTrigger['id']);
                 $triggerData['settings'] = maybe_serialize($triggerData['settings']);
                 Trigger::where('id', $triggerId)->update($triggerData);
@@ -74,6 +74,6 @@ class FeedService
 
     public static function isPublishable($feedId)
     {
-        return  !! Trigger::where('feed_id', $feedId)->where('status', 'published')->first() && !! Action::where('feed_id', $feedId)->where('status', 'published')->first();
+        return !!Trigger::where('feed_id', $feedId)->where('status', 'published')->first() && !!Action::where('feed_id', $feedId)->where('status', 'published')->first();
     }
 }

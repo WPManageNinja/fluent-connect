@@ -49,8 +49,15 @@ class Feed extends Model
     public function triggers()
     {
         $class = __NAMESPACE__ . '\Trigger';
-        return $this->hasMany(
+        return $this->hasOne(
             $class, 'feed_id', 'id'
+        );
+    }
+
+    public function trigger()
+    {
+        return $this->belongsTo(
+            __NAMESPACE__ . '\Trigger', 'id', 'feed_id'
         );
     }
 

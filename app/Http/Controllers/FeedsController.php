@@ -47,8 +47,9 @@ class FeedsController extends Controller
 
         $feed->title = sanitize_text_field($feedData['title']);
 
+
         FeedService::syncActions($feed->id, Arr::get($feedData, 'actions', []));
-        FeedService::syncTriggers($feed->id, Arr::get($feedData, 'triggers', []));
+        FeedService::syncTriggers($feed->id, [Arr::get($feedData, 'trigger', [])] );
 
         if($feedData['status'] != $feed->status) {
             $newStatus = $feedData['status'];
@@ -113,7 +114,7 @@ class FeedsController extends Controller
 
     public function getFeed(Request $request, $id)
     {
-        $feed = Feed::with(['triggers', 'actions'])->findOrFail($id);
+        $feed = Feed::with(['trigger', 'actions'])->findOrFail($id);
 
         $data = [
             'feed' => $feed,
