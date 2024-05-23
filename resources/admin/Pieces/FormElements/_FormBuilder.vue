@@ -2,7 +2,7 @@
     <div class="fc_global_form_builder">
         <el-form @submit.prevent.native="nativeSave" :data="formData" :label-position="label_position">
             <with-label v-for="(field,fieldIndex) in fields" :key="fieldIndex" :field="field">
-                <component :is="field.type" v-model="formData[fieldIndex]" :field="field"/>
+                <component :suggests="suggests" :is="field.type" v-model="formData[fieldIndex]" :field="field"/>
             </with-label>
         </el-form>
     </div>
@@ -19,6 +19,7 @@ import InputGroupedOptions from './_InputGroupedOptions'
 import InlineCheckbox from './_InlineCheckbox'
 import VerifiedEmailInput from './_VerifiedEmailInput'
 import CheckboxGroup from './_InputCheckboxes'
+import InputData from './InputPopover.vue'
 
 export default {
     name: 'global_form_builder',
@@ -32,7 +33,8 @@ export default {
         InlineCheckbox,
         VerifiedEmailInput,
         CheckboxGroup,
-        InputGroupedOptions
+        InputGroupedOptions,
+        InputData
     },
     props: {
         formData: {
@@ -52,6 +54,13 @@ export default {
         fields: {
             required: true,
             type: Object
+        },
+        suggests: {
+            required: false,
+            type: Object,
+            default() {
+                return {}
+            }
         }
     },
     methods: {

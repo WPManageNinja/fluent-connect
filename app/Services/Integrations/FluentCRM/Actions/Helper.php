@@ -16,7 +16,7 @@ class Helper
 
         $email = $data['email'];
 
-        if($checkExist) {
+        if ($checkExist) {
             $exist = FluentCrmApi('contacts')->getContact($email);
             if ($exist) {
                 return new \WP_Error('skipped', 'Contact already exist. Action has been skipped');
@@ -41,7 +41,7 @@ class Helper
             admin_url('admin.php?page=fluentcrm-admin#/')
         );;
 
-        return $baseUrl.'subscribers/'.$contactId;
+        return $baseUrl . 'subscribers/' . $contactId;
 
     }
 }

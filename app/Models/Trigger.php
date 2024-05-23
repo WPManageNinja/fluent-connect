@@ -75,7 +75,10 @@ class Trigger extends Model
         $triggerClass = ConnectStores::getTriggerClass($this->trigger_provider, $this->trigger_name);
 
         if ($triggerClass) {
-            return $triggerClass->getSchema($this);
+            $data = $triggerClass->getSchema($this);
+            if($data) {
+                return array_values($data);
+            }
         }
 
         return null;

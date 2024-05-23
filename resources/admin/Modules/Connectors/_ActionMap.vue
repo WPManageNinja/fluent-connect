@@ -25,7 +25,7 @@
                     />
                 </el-select>
                 <div v-if="action.action_name">
-                    <form-builder :fields="settings_fields" :form-data="action.settings" />
+                    <form-builder :suggests="mock_data" :fields="settings_fields" :form-data="action.settings" />
 
                     <div class="el-form-item__content">
                         <label>Internal Label</label>
@@ -48,7 +48,7 @@
 import FormBuilder from '../../Pieces/FormElements/_FormBuilder';
 export default {
     name: 'ActionMap',
-    props: ['action', 'provider_info'],
+    props: ['action', 'provider_info', 'mock_data'],
     components: {
         FormBuilder
     },

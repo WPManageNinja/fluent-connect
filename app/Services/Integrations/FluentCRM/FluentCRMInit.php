@@ -4,6 +4,7 @@ namespace FluentConnect\App\Services\Integrations\FluentCRM;
 use FluentConnect\App\Services\ConnectStores;
 use FluentConnect\App\Services\Integrations\FluentCRM\Actions\AddToList;
 use FluentConnect\App\Services\Integrations\FluentCRM\Actions\AddToTag;
+use FluentConnect\App\Services\Integrations\FluentCRM\Actions\CreateOrUpdateContact;
 use FluentConnect\App\Services\Integrations\FluentCRM\Actions\RemoveFromList;
 use FluentConnect\App\Services\Integrations\FluentCRM\Actions\RemoveFromTag;
 
@@ -23,5 +24,6 @@ class FluentCRMInit
         ConnectStores::addAction('fluentcrm', 'fconnect_fluentcrm_add_to_list', AddToList::class);
         ConnectStores::addAction('fluentcrm', 'fconnect_fluentcrm_remove_tag', RemoveFromTag::class);
         ConnectStores::addAction('fluentcrm', 'fconnect_fluentcrm_remove_from_list', RemoveFromList::class);
+        ConnectStores::addAction('fluentcrm', 'fconnect_fluentcrm_create_or_update_contact', CreateOrUpdateContact::class);
     }
 }

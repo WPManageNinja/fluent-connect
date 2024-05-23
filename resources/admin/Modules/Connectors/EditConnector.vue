@@ -48,7 +48,7 @@
                             <h3>Please setup a trigger first</h3>
                         </div>
                         <template v-else>
-                            <action-mappers @update="updateFeed()" :actions="feed.actions" :all_actions="all_actions" :feed_id="feed.id" />
+                            <action-mappers :mock_data="feed.mock_data" @update="updateFeed()" :actions="feed.actions" :all_actions="all_actions" :feed_id="feed.id" />
                         </template>
                     </div>
                 </div>
