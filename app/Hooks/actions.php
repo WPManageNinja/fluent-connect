@@ -27,14 +27,19 @@ $app->addAction('init', 'WebhookReceiverHandler@route');
 (new \FluentConnect\App\Services\ThriveCart\ThriveCart())->init();
 (new \FluentConnect\App\Services\Actions\ActionsInit())->init();
 
-//\FluentConnect\App\Services\ConnectStores::addTriggerProvider('wp', [
-//    'title'                        => 'WordPress',
-//    'logo'                         => FLUENT_CONNECT_PLUGIN_URL . 'assets/images/wordpress.png',
-//    'description'                  => 'Do actions based on ThriveCart events like order succes, order refunds etc',
-//    'require_integration_selector' => false,
-//    'enabled'                      => true
-//]);
-//
-//\FluentConnect\App\Services\ConnectStores::addTrigger('wp', 'profile_update', \FluentConnect\App\Services\Triggers\WP\ProfileUpdated::class);
+\FluentConnect\App\Services\ConnectStores::addTriggerProvider('wp', [
+    'title'                        => 'WordPress',
+    'logo'                         => FLUENT_CONNECT_PLUGIN_URL . 'assets/images/wordpress.png',
+    'description'                  => 'Do actions based on WordPress user profile updates, signups, login etc',
+    'require_integration_selector' => false,
+    'enabled'                      => true
+]);
+
+\FluentConnect\App\Services\ConnectStores::addTrigger('wp', 'wp_update_user', \FluentConnect\App\Services\Triggers\WP\ProfileUpdated::class);
 
 (new \FluentConnect\App\Hooks\Handlers\TriggerInitHandler())->init();
+
+
+add_action('wp_update_user', function ($userId) {
+    error_log('UserID: '.$userId);
+});

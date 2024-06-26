@@ -107,7 +107,7 @@ class TriggerInitHandler
             ];
 
             if (is_wp_error($result)) {
-                $result = new \WP_Error('ddd', 'ddd');
+                $result = new \WP_Error($result->get_error_code(), $result->get_error_message());
                 $errorCode = $result->get_error_code();
                 $logData['status'] = $errorCode;
                 $logData['description'] = $result->get_error_message();

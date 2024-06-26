@@ -20,7 +20,6 @@ class WebhookReceiverHandler
         }
 
 
-
         do_action('fluent_connector_handle_webhook_'.$provider, $request);
 
         exit(200);

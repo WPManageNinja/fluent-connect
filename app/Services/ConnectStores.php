@@ -43,10 +43,9 @@ class ConnectStores
             return $providers;
         }
 
-
         foreach (self::getAllTriggerCats() as $providerName => $triggers) {
 
-            if(!isset($providers[$providerName])) {
+            if (!isset($providers[$providerName])) {
                 continue;
             }
 
@@ -112,7 +111,7 @@ class ConnectStores
 
         foreach (self::getAllActionsCats() as $providerName => $actions) {
 
-            if(!isset($providers[$providerName])) {
+            if (!isset($providers[$providerName])) {
                 continue;
             }
 
