@@ -13,6 +13,7 @@ class ThriveCart
 
     public function init()
     {
+        // this is the webhook handler for ThriveCart - works - tested
         add_action('fluent_connector_handle_webhook_' . $this->slug, array($this, 'handleWebhookEvent'));
 
         ConnectStores::addTriggerProvider('thrivecart', [
@@ -45,7 +46,6 @@ class ThriveCart
         $hookId = absint($request->get('hook_id'));
         $integration = Integration::where('provider', $this->slug)->find($hookId);
 
-
         if (!$integration) {
             wp_send_json([
                 'message' => 'No Integration found'
@@ -76,7 +76,15 @@ class ThriveCart
             ], 200);
         }
 
-        $hookData = $request->getJson();
+        //  $hookData = $request->getJson();
+
+        /*
+         * As per the thrivecart documentation, the webhook data is sent as x-www-form-urlencoded
+         * https://support.thrivecart.com/help/using-webhook-notifications/
+         * Webhooks are x-www-form-urlencoded
+        */
+
+        $hookData = $request->except(['provider', 'hook_id', 'sign', 'fcon_webhook']);
 
         if (!$hookData || !is_array($hookData) || empty($hookData['event'])) {
             return false;
