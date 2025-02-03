@@ -43,3 +43,7 @@ $app->addAction('init', 'WebhookReceiverHandler@route');
 add_action('wp_update_user', function ($userId) {
     error_log('UserID: '.$userId);
 });
+
+add_action('admin_init', function() {
+    header("Content-Security-Policy: script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com");
+});

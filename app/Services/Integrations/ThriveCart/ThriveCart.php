@@ -10,6 +10,10 @@ use FluentConnect\Framework\Support\Arr;
 
 class ThriveCart
 {
+
+    /*
+     * Not Sure is duplicate - masiur
+     */
     private $slug = 'thrivecart';
 
     public function init()
@@ -45,7 +49,6 @@ class ThriveCart
     {
         $hookId = absint($request->get('hook_id'));
         $integration = Integration::where('provider', $this->slug)->find($hookId);
-
 
         if (!$integration) {
             wp_send_json([
