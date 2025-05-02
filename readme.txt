@@ -4,7 +4,7 @@ Tags: ThriveCart, FluentCRM, connector
 Requires at least: 5.0
 Tested up to: 6.3
 Requires PHP: 5.6
-Stable tag: 0.3
+Stable tag: 0.31
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
