@@ -30,3 +30,10 @@ We use Vue 3.0 and WordPress REST API. Please feel free to add or improve a feat
 - run `npm install`
 - for development `npx mix watch`
 - To Build assets `npx mix --production`
+
+##### Quick Build
+
+- `npm install`
+- `bash build.sh`
+
+Collect the build file from /builds directory
