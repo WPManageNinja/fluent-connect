@@ -20,19 +20,25 @@
                     <el-table-column label="Actions" width="180">
                         <template #default="scope">
                             <router-link :to="{ name: 'view_integration', params: { id: scope.row.id } }">
-                                <i class="el-icon-view"></i>
-                            </router-link>
+
+                                        <span>View</span>
+
+                                </router-link>
                             <el-popconfirm
                                 confirm-button-text="Yes, Delete this"
+                                confirm-button-type="danger"
                                 cancel-button-text="No"
                                 icon="el-icon-info"
+                                width="250"
                                 icon-color="red"
                                 title="Are you sure to delete this? All associate data connectors will be deleted too"
                                 @confirm="deleteIntegration(scope.row.id)"
                             >
                                 <template #reference>
-                                    <el-button style="margin-left: 10px; color: red;" type="text" size="mini"
-                                               icon="el-icon-delete"></el-button>
+                                    <span style="text-decoration: underline; margin-left: 10px; color: red;cursor: pointer;" type="text;" size="small">
+                                        <i class="el-icon-delete"></i>
+                                        <span> Delete</span>
+                                    </span>
                                 </template>
                             </el-popconfirm>
                         </template>
@@ -49,7 +55,7 @@
 
 <script type="text/babel">
 import Pagination from "../../Pieces/Pagination";
-
+import { View } from '@element-plus/icons-vue';
 export default {
     name: 'AllIntegrations',
     components: {

@@ -81,14 +81,14 @@ class AdminMenuHandler
         $slug = $app->config->get('app.slug');
 
         wp_enqueue_style(
-            $slug . '_admin_app', $assets . '/admin/css/admin.css'
+            $slug . '_admin_app', $assets . 'admin/css/admin.css'
         );
 
         do_action($slug . '_loading_app');
 
         wp_enqueue_script(
             $slug . '_admin_app_start',
-            $assets . '/admin/js/start.js',
+            $assets . 'admin/js/start.js',
             array('jquery'),
             '1.0',
             true
@@ -97,7 +97,7 @@ class AdminMenuHandler
 
         wp_enqueue_script(
             $slug . '_global_admin',
-            $assets . '/admin/js/global_admin.js',
+            $assets . 'admin/js/global_admin.js',
             array('jquery'),
             '1.0',
             true
