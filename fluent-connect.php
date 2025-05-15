@@ -2,7 +2,7 @@
 /*
 Plugin Name: Fluent Connect
 Description: Connect FluentCRM with ThriveCart
-Version: 0.31
+Version: 0.4
 Author: WPManageNinja
 Author URI: https://wpmanageninja.com
 Plugin URI: https://github.com/WPManageNinja/fluent-connect
@@ -14,7 +14,7 @@ Domain Path: /language
 
 defined('ABSPATH') or die;
 
-define('FLUENT_CONNECT_PLUGIN_VERSION', '0.31');
+define('FLUENT_CONNECT_PLUGIN_VERSION', '0.4');
 define('FLUENT_CONNECT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('FLUENT_CONNECT_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
