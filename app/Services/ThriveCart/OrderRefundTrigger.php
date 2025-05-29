@@ -63,7 +63,10 @@ class OrderRefundTrigger extends BaseTrigger
     {
         $event = $args[0];
         $remoteAccount = Arr::get($event, 'thrivecart_account');
-        if($remoteAccount != $trigger->remote_id) {
+
+        $trigger->load('integration');
+
+        if($remoteAccount != $trigger->integration->remote_id) {
             return false; // Not Our Account
         }
 
