@@ -4,7 +4,7 @@
  * Enable Query Log
  */
 if (!function_exists('fluentconnector_eql')) {
-    function wpfluent_eql()
+    function fluentconnector_eql()
     {
         defined('SAVEQUERIES') || define('SAVEQUERIES', true);
     }
