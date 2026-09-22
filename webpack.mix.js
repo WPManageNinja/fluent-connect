@@ -40,3 +40,5 @@ mix
     .copy('resources/images', 'assets/images')
     .copy('resources/fonts', 'assets/admin/css/fonts')
     .setPublicPath('assets');
+
+mix.disableNotifications();
