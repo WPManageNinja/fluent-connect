@@ -47,6 +47,7 @@ class ThriveCart
         $integration = Integration::where('provider', $this->slug)->find($hookId);
 
         if (!$integration) {
+            $this->logRejected('integration_not_found');
             wp_send_json([
                 'message' => 'No Integration found'
             ], 404);
@@ -55,6 +56,7 @@ class ThriveCart
         $sign = $request->get('sign');
 
         if ($sign != Arr::get($integration->settings, 'webhook_signature')) {
+            $this->logRejected('signature_mismatch', $hookId);
             wp_send_json([
                 'message' => 'Signature mismatch'
             ], 404);
@@ -76,17 +78,18 @@ class ThriveCart
             ], 200);
         }
 
-        //  $hookData = $request->getJson();
+        $hookData = $request->isJson()
+            ? $request->json()
+            : $request->except(['provider', 'hook_id', 'sign', 'fcon_webhook']);
 
-        /*
-         * As per the thrivecart documentation, the webhook data is sent as x-www-form-urlencoded
-         * https://support.thrivecart.com/help/using-webhook-notifications/
-         * Webhooks are x-www-form-urlencoded
-        */
+        if (!is_array($hookData) || !$hookData) {
+            $hookData = json_decode($request->getContent(), true);
+        }
 
-        $hookData = $request->except(['provider', 'hook_id', 'sign', 'fcon_webhook']);
+        $hookData = self::normalizeWebhookPayload($hookData);
 
-        if (!$hookData || !is_array($hookData) || empty($hookData['event'])) {
+        if (empty($hookData['event'])) {
+            $this->logRejected('missing_event', $hookId);
             return false;
         }
 
@@ -96,6 +99,29 @@ class ThriveCart
 
         do_action('fluent_connector_thrivecart_event_' . $event, $hookData);
 
+    }
+
+    public static function normalizeWebhookPayload($payload)
+    {
+        if (!is_array($payload)) {
+            return [];
+        }
+
+        $purchaseMap = Arr::get($payload, 'purchase_map', Arr::get($payload, 'accessible_purchase_map', []));
+
+        if (!is_array($purchaseMap)) {
+            $purchaseMap = array_filter(array_map('trim', explode(',', (string) $purchaseMap)));
+        }
+
+        $payload['purchase_map'] = $purchaseMap;
+        $payload['accessible_purchase_map'] = $purchaseMap;
+
+        return $payload;
+    }
+
+    private function logRejected($reason, $hookId = null)
+    {
+        error_log('[FluentConnect][ThriveCart] Webhook rejected: ' . $reason . ($hookId ? ' (hook ' . $hookId . ')' : ''));
     }
 
 }

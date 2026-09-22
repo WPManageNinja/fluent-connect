@@ -71,13 +71,16 @@ class OrderSuccessTrigger extends BaseTrigger
         $trigger->load('integration');
 
         if ($remoteAccount != $trigger->integration->remote_id) {
+            error_log('[FluentConnect][ThriveCart] Webhook ignored: account mismatch');
             return false; // Not Our Account
         }
         // check the product match
-        if ($targetProductIds = $trigger->settings['product_ids']) {
+        if ($targetProductIds = Arr::get($trigger->settings, 'product_ids', [])) {
 
-            $intersected = array_intersect($event['accessible_purchase_map'], $targetProductIds);
+            $purchaseMap = Arr::get($event, 'purchase_map', Arr::get($event, 'accessible_purchase_map', []));
+            $intersected = array_intersect((array) $purchaseMap, $targetProductIds);
             if (!$intersected) {
+                error_log('[FluentConnect][ThriveCart] Webhook ignored: product mismatch');
                 return false;
             }
 
@@ -93,6 +96,8 @@ class OrderSuccessTrigger extends BaseTrigger
         if($data) {
             $data['__runner_hash'] = $event['order_id'];
             $data['__event'] = $event;
+        } else {
+            error_log('[FluentConnect][ThriveCart] Webhook ignored: missing customer data');
         }
 
         return $data;
